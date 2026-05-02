@@ -844,7 +844,7 @@ const LABELS = {
 // ── Load data from leads.json ──────────────────────────────
 async function loadData() {
   try {
-    const r = await fetch(`../data/leads.json?t=${Date.now()}`);
+    const r = await fetch(`/pinellas-intel/data/leads.json?t=${Date.now()}`);
     const data = await r.json();
     renderDashboard(data);
   } catch(e) {
