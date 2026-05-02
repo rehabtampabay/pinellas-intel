@@ -1,0 +1,13 @@
+{
+  "updated": "2026-05-02 00:19 UTC",
+  "county": "Pinellas",
+  "total_new": 0,
+  "breakdown": {
+    "lis_pendens": 0,
+    "probate": 0,
+    "evictions": 0,
+    "mechanic_liens": 0,
+    "judgments": 0,
+    "tax_deeds": 0
+  }
+}
