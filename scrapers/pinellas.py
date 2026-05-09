@@ -36,7 +36,7 @@ def fetch_or_file(prefix, days_back=5):
     Returns list of parsed rows as dicts.
     """
     today = datetime.today()
-    for i in range(days_back):
+    for i in range(1, days_back + 1):
         date = today - timedelta(days=i)
         fname = build_or_filename(prefix, date)
         url = f"{BASE}/OFFICIAL_RECORDS/INDEXES_DAILY/{fname}"
@@ -101,7 +101,7 @@ def fetch_odyssey_csv(directory_url, days_back=10):
 
     today = datetime.today()
     targets = []
-    for i in range(days_back):
+    for i in range(1, days_back + 1):
         d = today - timedelta(days=i)
         targets.append(d.strftime("%B %d, %Y"))
         targets.append(d.strftime("%B %-d, %Y"))
