@@ -153,7 +153,7 @@ def scrape_lis_pendens():
     url = f"{BASE}/CIVIL/LIS_PENDENS_DAILY/"
     rows = fetch_odyssey_csv(url)
     if rows:
-        return sheets_helper.append_rows_deduplicated(
+        return sheets_helper.append_new_rows(
             config.SHEETS["lis_pendens"], rows, case_col_index=3)
     print("  ❌ No data")
     return 0
@@ -170,7 +170,7 @@ def scrape_probate():
     url = f"{BASE}/PROBATE/NEW_ESTATE_CASE_FILINGS_DAILY/"
     rows = fetch_odyssey_csv(url, days_back=10)
     if rows:
-        return sheets_helper.append_rows_deduplicated(
+        return sheets_helper.append_new_rows(
             config.SHEETS["probate"], rows, case_col_index=1)
     print("  ❌ No probate CSV found - checking directory...")
     # Try fetching directory to see what's there
@@ -193,7 +193,7 @@ def scrape_evictions():
     url = f"{BASE}/CIVIL/WRIT_OF_POSSESSIONS_DAILY/"
     rows = fetch_odyssey_csv(url)
     if rows:
-        return sheets_helper.append_rows_deduplicated(
+        return sheets_helper.append_new_rows(
             config.SHEETS["evictions"], rows, case_col_index=3)
     print("  ❌ No data")
     return 0
@@ -246,12 +246,12 @@ def scrape_official_records_index():
 
         if unique_liens:
             sheet_rows = [cols] + [[r.get(c,"") for c in cols] for r in unique_liens]
-            lien_count = sheets_helper.append_rows_deduplicated(
+            lien_count = sheets_helper.append_new_rows(
                 config.SHEETS["mechanic_liens"], sheet_rows, case_col_index=2)
 
         if unique_judgments:
             sheet_rows = [cols] + [[r.get(c,"") for c in cols] for r in unique_judgments]
-            judgment_count = sheets_helper.append_rows_deduplicated(
+            judgment_count = sheets_helper.append_new_rows(
                 config.SHEETS["judgments"], sheet_rows, case_col_index=2)
 
         # If nothing matched our codes, log what doc types ARE in the file
@@ -281,7 +281,7 @@ def scrape_official_records_index():
         if tax_deeds:
             cols = ["doc_type", "instrument", "name", "frm_to", "date_filed", "county"]
             sheet_rows = [cols] + [[r.get(c,"") for c in cols] for r in tax_deeds]
-            tax_deed_count = sheets_helper.append_rows_deduplicated(
+            tax_deed_count = sheets_helper.append_new_rows(
                 config.SHEETS["tax_deeds"], sheet_rows, case_col_index=2)
         else:
             # Log what deed types ARE in the file
@@ -330,11 +330,11 @@ def scrape_tax_deeds_and_surplus():
             td = sf = 0
             if len(data_rows) > 1:
                 print(f"  📥 {len(data_rows)-1} tax deed records")
-                td = sheets_helper.append_rows_deduplicated(
+                td = sheets_helper.append_new_rows(
                     config.SHEETS["tax_deeds"], data_rows, case_col_index=2)
             if len(surplus_rows) > 1:
                 print(f"  💰 {len(surplus_rows)-1} surplus records")
-                sf = sheets_helper.append_rows_deduplicated(
+                sf = sheets_helper.append_new_rows(
                     config.SHEETS["surplus_funds"], surplus_rows, case_col_index=2)
             return td + sf
 
