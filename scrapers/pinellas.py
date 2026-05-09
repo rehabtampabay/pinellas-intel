@@ -1,19 +1,3 @@
-"""
-Pinellas County Unified Scraper — v2
-Correct paths confirmed from live directory listing.
-
-CIVIL/:
-  - LIS_PENDENS_DAILY/         ✅ pre-foreclosure
-  - WRIT_OF_POSSESSIONS_DAILY/ ✅ evictions
-  - NEW_CASE_FILINGS_DAILY/    ✅ judgments + other civil
-
-OFFICIAL_RECORDS/:
-  - INDEXES_DAILY/             ✅ mechanic liens, HOA liens, judgments, deeds
-
-PROBATE/:
-  - NEW_ESTATE_CASE_FILINGS_DAILY/ ✅ probate
-"""
-
 import requests
 import re
 import csv
@@ -28,60 +12,124 @@ import config
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; PropertyIntel/1.0)"}
 
-# Doc type codes in the Official Records index that signal motivated sellers
-LIEN_CODES    = {"LNMECH", "LNHOA", "LNIRS", "LNCTY", "LNSTA", "LN"}
-JUDGMENT_CODES = {"JUD", "CCJ", "DRJUD", "JUDL", "FJUD"}
-DEED_CODES     = {"TDEED", "TAXDEED"}
+BASE = "https://publicfiles.mypinellasclerk.gov/download"
+
+# Doc type codes that signal motivated sellers
+LIEN_CODES     = {"LNMECH", "LNHOA", "LNIRS", "LNCTY", "LNSTA", "LNCON"}
+JUDGMENT_CODES = {"JUD", "CCJ", "DRJUD", "JUDL", "FJUD", "JUDO"}
+DEED_CODES     = {"TDEED", "TAXDEED", "CTD", "SRTD"}
 
 
 # ─────────────────────────────────────────────────────────────
-# HELPER: Fetch CSV from a directory listing page
+# HELPER: Build today's Official Records filename
+# Format: {prefix}2026{MMDD}01id.52
+# prefix: d=deeds, l=liens, m=mortgages, p=parties
 # ─────────────────────────────────────────────────────────────
 
-def fetch_csv_from_directory(directory_url, filename_pattern, days_back=10):
-    """Finds and downloads matching CSVs from a Pinellas public files directory."""
+def build_or_filename(prefix, date):
+    return f"{prefix}{date.strftime('%Y%m%d')}01id.52"
+
+
+def fetch_or_file(prefix, days_back=5):
+    """
+    Downloads the pipe-delimited Official Records index file.
+    Returns list of parsed rows as dicts.
+    """
+    today = datetime.today()
+    for i in range(days_back):
+        date = today - timedelta(days=i)
+        fname = build_or_filename(prefix, date)
+        url = f"{BASE}/OFFICIAL_RECORDS/INDEXES_DAILY/{fname}"
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=20)
+            if not r.ok or len(r.content) < 50:
+                continue
+            try:
+                text = r.content.decode("utf-8")
+            except UnicodeDecodeError:
+                text = r.content.decode("latin-1")
+
+            rows = []
+            for line in text.strip().splitlines():
+                parts = line.split("|")
+                if len(parts) >= 5:
+                    rows.append({
+                        "doc_type":   parts[0].strip(),
+                        "county":     parts[1].strip(),
+                        "instrument": parts[2].strip(),
+                        "seq":        parts[3].strip(),
+                        "frm_to":     parts[4].strip(),
+                        "name":       parts[5].strip() if len(parts) > 5 else "",
+                        "date_filed": date.strftime("%Y-%m-%d"),
+                        "source_file": fname,
+                    })
+
+            if rows:
+                print(f"  📥 {fname} → {len(rows)} raw lines")
+                return rows, date.strftime("%Y-%m-%d")
+
+        except Exception as e:
+            print(f"  ⚠️  {fname}: {e}")
+
+    return [], None
+
+
+def rows_to_sheet_format(records, sheet_cols):
+    """Converts list of dicts to [header, row, row...] format for Sheets."""
+    if not records:
+        return []
+    result = [sheet_cols]
+    for r in records:
+        result.append([r.get(c, "") for c in sheet_cols])
+    return result
+
+
+# ─────────────────────────────────────────────────────────────
+# HELPER: Odyssey CSV files (Lis Pendens, Evictions)
+# ─────────────────────────────────────────────────────────────
+
+def fetch_odyssey_csv(directory_url, days_back=10):
     try:
         resp = requests.get(directory_url, headers=HEADERS, timeout=20)
         resp.raise_for_status()
     except Exception as e:
-        print(f"  ❌ Could not reach {directory_url}: {e}")
+        print(f"  ❌ {directory_url}: {e}")
         return []
 
     soup = BeautifulSoup(resp.text, "html.parser")
     links = [a['href'] for a in soup.find_all('a', href=True)]
 
     today = datetime.today()
-    # Build list of target date strings (e.g. "May 02, 2026")
-    target_dates = [(today - timedelta(days=i)).strftime("%B %d, %Y") for i in range(days_back)]
-    # Also try zero-padded variants (e.g. "May 2, 2026")
-    target_dates += [(today - timedelta(days=i)).strftime("%B %-d, %Y") for i in range(days_back)]
+    targets = []
+    for i in range(days_back):
+        d = today - timedelta(days=i)
+        targets.append(d.strftime("%B %d, %Y"))
+        targets.append(d.strftime("%B %-d, %Y"))
 
     matched = []
     for link in links:
         fname = link.split("/")[-1].replace("%20", " ")
-        for date_str in target_dates:
-            if date_str in fname and re.search(filename_pattern, fname, re.IGNORECASE):
+        if not fname.endswith(".csv"):
+            continue
+        for t in targets:
+            if t in fname:
                 full_url = directory_url.rstrip("/") + "/" + link.split("/")[-1]
-                matched.append((date_str, full_url, fname))
+                matched.append((t, full_url, fname))
                 break
 
     if not matched:
-        print(f"  ⚠️  No recent files matched in {directory_url}")
         return []
 
     all_rows = []
-    for date_str, url, fname in sorted(set(matched), reverse=True)[:3]:
+    for _, url, fname in sorted(set(matched), reverse=True)[:3]:
         try:
             r = requests.get(url, headers=HEADERS, timeout=30)
             if not r.ok or len(r.content) < 300:
-                print(f"  ⚠️  {fname} too small or failed")
                 continue
-            # Try UTF-8, fall back to latin-1
             try:
                 text = r.content.decode("utf-8")
             except UnicodeDecodeError:
                 text = r.content.decode("latin-1")
-
             reader = csv.reader(io.StringIO(text))
             rows = list(reader)
             if len(rows) > 1:
@@ -89,37 +137,10 @@ def fetch_csv_from_directory(directory_url, filename_pattern, days_back=10):
                 if not all_rows:
                     all_rows.extend(rows)
                 else:
-                    all_rows.extend(rows[1:])  # skip header on subsequent files
+                    all_rows.extend(rows[1:])
         except Exception as e:
-            print(f"  ❌ Error reading {fname}: {e}")
+            print(f"  ❌ {fname}: {e}")
 
-    return all_rows
-
-
-def fetch_csv_by_date_format(base_url, fname_template, days_back=10):
-    """For files named by date (MM-DD-YYYY format)."""
-    today = datetime.today()
-    all_rows = []
-    for i in range(days_back):
-        date = today - timedelta(days=i)
-        fname = fname_template.format(date=date.strftime("%m-%d-%Y"))
-        url = base_url.rstrip("/") + "/" + fname
-        try:
-            r = requests.get(url, headers=HEADERS, timeout=15)
-            if not r.ok or len(r.content) < 300:
-                continue
-            try:
-                text = r.content.decode("utf-8")
-            except UnicodeDecodeError:
-                text = r.content.decode("latin-1")
-            reader = csv.reader(io.StringIO(text))
-            rows = list(reader)
-            if len(rows) > 1:
-                print(f"  📥 {fname} → {len(rows)-1} records")
-                all_rows.extend(rows)
-                break
-        except Exception as e:
-            print(f"  ❌ {e}")
     return all_rows
 
 
@@ -128,9 +149,9 @@ def fetch_csv_by_date_format(base_url, fname_template, days_back=10):
 # ─────────────────────────────────────────────────────────────
 
 def scrape_lis_pendens():
-    print("\n🔴 Lis Pendens (Pre-Foreclosure)...")
-    url = "https://publicfiles.mypinellasclerk.gov/download/CIVIL/LIS_PENDENS_DAILY/"
-    rows = fetch_csv_from_directory(url, r"Odyssey-JobOutput.*\.csv")
+    print("\n🔴 Lis Pendens...")
+    url = f"{BASE}/CIVIL/LIS_PENDENS_DAILY/"
+    rows = fetch_odyssey_csv(url)
     if rows:
         return sheets_helper.append_rows_deduplicated(
             config.SHEETS["lis_pendens"], rows, case_col_index=3)
@@ -139,29 +160,27 @@ def scrape_lis_pendens():
 
 
 # ─────────────────────────────────────────────────────────────
-# SIGNAL 2: PROBATE / ESTATE
+# SIGNAL 2: PROBATE
+# Source: PROBATE/NEW_ESTATE_CASE_FILINGS_DAILY/
+# Files are Odyssey-style CSVs
 # ─────────────────────────────────────────────────────────────
 
 def scrape_probate():
     print("\n🟣 Probate / Estate...")
-    url = "https://publicfiles.mypinellasclerk.gov/download/PROBATE/NEW_ESTATE_CASE_FILINGS_DAILY/"
-
-    # Try Odyssey-style filename first
-    rows = fetch_csv_from_directory(url, r"Odyssey-JobOutput.*\.csv")
-
-    # Fallback: date-named file
-    if not rows:
-        rows = fetch_csv_by_date_format(
-            url, "EstateNewCaseFilingsDaily_{date}.csv")
-
-    # Fallback 2: any CSV in that directory
-    if not rows:
-        rows = fetch_csv_from_directory(url, r"\.csv$")
-
+    url = f"{BASE}/PROBATE/NEW_ESTATE_CASE_FILINGS_DAILY/"
+    rows = fetch_odyssey_csv(url, days_back=10)
     if rows:
         return sheets_helper.append_rows_deduplicated(
             config.SHEETS["probate"], rows, case_col_index=1)
-    print("  ❌ No data")
+    print("  ❌ No probate CSV found - checking directory...")
+    # Try fetching directory to see what's there
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=15)
+        soup = BeautifulSoup(resp.text, "html.parser")
+        links = [a.get_text() for a in soup.find_all('a')]
+        print(f"  📂 Files in probate dir: {links[:10]}")
+    except Exception as e:
+        print(f"  ❌ {e}")
     return 0
 
 
@@ -170,9 +189,9 @@ def scrape_probate():
 # ─────────────────────────────────────────────────────────────
 
 def scrape_evictions():
-    print("\n🟡 Evictions (Writ of Possession)...")
-    url = "https://publicfiles.mypinellasclerk.gov/download/CIVIL/WRIT_OF_POSSESSIONS_DAILY/"
-    rows = fetch_csv_from_directory(url, r"Odyssey-JobOutput.*\.csv")
+    print("\n🟡 Evictions...")
+    url = f"{BASE}/CIVIL/WRIT_OF_POSSESSIONS_DAILY/"
+    rows = fetch_odyssey_csv(url)
     if rows:
         return sheets_helper.append_rows_deduplicated(
             config.SHEETS["evictions"], rows, case_col_index=3)
@@ -181,125 +200,125 @@ def scrape_evictions():
 
 
 # ─────────────────────────────────────────────────────────────
-# SIGNAL 4 + 5: MECHANIC LIENS + JUDGMENTS
+# SIGNALS 4 + 5 + 6: LIENS, JUDGMENTS, TAX DEEDS
 # Source: OFFICIAL_RECORDS/INDEXES_DAILY/
-# This single feed contains ALL recorded doc types — we filter by code
+#
+# File prefixes:
+#   l = liens  (LNMECH, LNHOA, LNIRS, etc.)
+#   d = deeds  (TDEED, DPA, MTG, etc.)
+#   m = misc   (mortgages, satisfactions)
+#   p = party  (name index — cross-reference)
+#
+# Format: pipe-delimited
+# DocType|County|InstrumentNum|SeqNum|FRM_TO|PartyName
 # ─────────────────────────────────────────────────────────────
 
 def scrape_official_records_index():
-    """
-    Downloads the daily Official Records index and splits into:
-    - Mechanic/HOA/IRS Liens
-    - Judgments
-    - Tax Deeds (bonus)
-    Returns (lien_count, judgment_count, tax_deed_count)
-    """
-    print("\n📋 Official Records Index (Liens + Judgments + Tax Deeds)...")
-    url = "https://publicfiles.mypinellasclerk.gov/download/OFFICIAL_RECORDS/INDEXES_DAILY/"
-    rows = fetch_csv_from_directory(url, r"\.csv$", days_back=5)
+    print("\n📋 Official Records Index...")
 
-    if not rows or len(rows) < 2:
-        print("  ❌ No Official Records index data")
-        return 0, 0, 0
+    lien_count = judgment_count = tax_deed_count = 0
 
-    header = rows[0]
-    print(f"  📊 Index columns: {header[:8]}")
+    # ── LIEN FILE (l prefix) ──
+    print("  🔧 Fetching lien file (l prefix)...")
+    lien_records, filed_date = fetch_or_file("l")
 
-    # Find the doc type column (usually named "DocType", "Document Type", "TYPE" etc.)
-    doc_type_col = None
-    for i, col in enumerate(header):
-        if any(k in col.upper() for k in ["DOCTYPE", "DOC_TYPE", "DOCUMENT TYPE", "TYPE", "INSTRUMENT"]):
-            doc_type_col = i
-            break
+    if lien_records:
+        # Deduplicate by instrument number — keep one row per instrument
+        seen = set()
+        unique_liens = []
+        unique_judgments = []
 
-    if doc_type_col is None:
-        # If we can't find doc type column, push everything as general records
-        print(f"  ⚠️  Can't find doc type column in: {header}")
-        print(f"  ℹ️  Pushing all {len(rows)-1} records to Mechanic Liens tab as raw index")
-        return sheets_helper.append_rows_deduplicated(
-            config.SHEETS["mechanic_liens"], rows, case_col_index=1), 0, 0
+        for r in lien_records:
+            key = r["instrument"]
+            if key in seen or not key:
+                continue
+            seen.add(key)
+            doc = r["doc_type"].upper()
+            if any(c in doc for c in LIEN_CODES):
+                unique_liens.append(r)
+            elif any(c in doc for c in JUDGMENT_CODES):
+                unique_judgments.append(r)
 
-    # Split rows by doc type
-    lien_rows = [header]
-    judgment_rows = [header]
-    tax_deed_rows = [header]
-    other_rows = [header]
+        print(f"  🔧 Mechanic/HOA Liens: {len(unique_liens)}")
+        print(f"  ⚖️  Judgments: {len(unique_judgments)}")
 
-    for row in rows[1:]:
-        if len(row) <= doc_type_col:
-            continue
-        doc_type = row[doc_type_col].upper().strip()
+        cols = ["doc_type", "instrument", "name", "frm_to", "date_filed", "county"]
 
-        if any(code in doc_type for code in LIEN_CODES):
-            lien_rows.append(row)
-        elif any(code in doc_type for code in JUDGMENT_CODES):
-            judgment_rows.append(row)
-        elif any(code in doc_type for code in DEED_CODES):
-            tax_deed_rows.append(row)
+        if unique_liens:
+            sheet_rows = [cols] + [[r.get(c,"") for c in cols] for r in unique_liens]
+            lien_count = sheets_helper.append_rows_deduplicated(
+                config.SHEETS["mechanic_liens"], sheet_rows, case_col_index=2)
+
+        if unique_judgments:
+            sheet_rows = [cols] + [[r.get(c,"") for c in cols] for r in unique_judgments]
+            judgment_count = sheets_helper.append_rows_deduplicated(
+                config.SHEETS["judgments"], sheet_rows, case_col_index=2)
+
+        # If nothing matched our codes, log what doc types ARE in the file
+        if not unique_liens and not unique_judgments:
+            doc_types = list(set(r["doc_type"] for r in lien_records[:100]))
+            print(f"  ℹ️  Doc types found in l-file: {doc_types[:20]}")
+
+    # ── DEED FILE (d prefix) — Tax Deeds ──
+    print("  🏛️  Fetching deed file (d prefix)...")
+    deed_records, _ = fetch_or_file("d")
+
+    if deed_records:
+        seen = set()
+        tax_deeds = []
+
+        for r in deed_records:
+            key = r["instrument"]
+            if key in seen or not key:
+                continue
+            seen.add(key)
+            doc = r["doc_type"].upper()
+            if any(c in doc for c in DEED_CODES):
+                tax_deeds.append(r)
+
+        print(f"  🏛️  Tax Deeds: {len(tax_deeds)}")
+
+        if tax_deeds:
+            cols = ["doc_type", "instrument", "name", "frm_to", "date_filed", "county"]
+            sheet_rows = [cols] + [[r.get(c,"") for c in cols] for r in tax_deeds]
+            tax_deed_count = sheets_helper.append_rows_deduplicated(
+                config.SHEETS["tax_deeds"], sheet_rows, case_col_index=2)
         else:
-            other_rows.append(row)
-
-    print(f"  🔧 Liens: {len(lien_rows)-1} | ⚖️  Judgments: {len(judgment_rows)-1} | 🏛️  Tax Deeds: {len(tax_deed_rows)-1}")
-
-    lien_count = 0
-    judgment_count = 0
-    tax_deed_count = 0
-
-    if len(lien_rows) > 1:
-        lien_count = sheets_helper.append_rows_deduplicated(
-            config.SHEETS["mechanic_liens"], lien_rows, case_col_index=1)
-
-    if len(judgment_rows) > 1:
-        judgment_count = sheets_helper.append_rows_deduplicated(
-            config.SHEETS["judgments"], judgment_rows, case_col_index=1)
-
-    if len(tax_deed_rows) > 1:
-        tax_deed_count = sheets_helper.append_rows_deduplicated(
-            config.SHEETS["tax_deeds"], tax_deed_rows, case_col_index=1)
+            # Log what deed types ARE in the file
+            doc_types = list(set(r["doc_type"] for r in deed_records[:200]))
+            print(f"  ℹ️  Doc types found in d-file: {doc_types[:20]}")
 
     return lien_count, judgment_count, tax_deed_count
 
 
-def scrape_mechanic_liens():
-    """Wrapper — calls the shared official records scraper."""
-    liens, _, _ = scrape_official_records_index()
-    return liens
-
-
-def scrape_judgments():
-    """Judgments already handled in scrape_official_records_index."""
-    return 0  # Already counted above
-
-
 # ─────────────────────────────────────────────────────────────
-# SIGNAL 6: TAX DEEDS + SURPLUS FUNDS
+# SIGNAL 7: SURPLUS FUNDS
 # Source: pinellas.realtdm.com
 # ─────────────────────────────────────────────────────────────
 
 def scrape_tax_deeds_and_surplus():
-    print("\n🟢 Tax Deeds + Surplus Funds (realtdm)...")
-    base = "https://pinellas.realtdm.com"
+    print("\n💰 Tax Deeds + Surplus (realtdm.com)...")
     session = requests.Session()
     session.headers.update(HEADERS)
 
     try:
-        resp = session.get(f"{base}/public/cases/list", timeout=30)
+        resp = session.get(
+            "https://pinellas.realtdm.com/public/cases/list",
+            timeout=30)
         soup = BeautifulSoup(resp.text, "html.parser")
         table = soup.find("table", {"id": "table"})
 
         if table:
-            rows_html = table.find_all("tr")
-            data_rows = [["Status","Case Number","Date Created","Parcel Number",
-                          "Sale Date","Opening Bid","Surplus Balance","County"]]
+            data_rows    = [["Status","Case Number","Date Created","Parcel Number",
+                             "Sale Date","Opening Bid","Surplus Balance","County"]]
             surplus_rows = [["Status","Case Number","Date Created","Parcel Number",
                              "Sale Date","Surplus Balance","County"]]
 
-            for tr in rows_html[1:]:
+            for tr in table.find_all("tr")[1:]:
                 cells = [td.get_text(strip=True) for td in tr.find_all("td")]
                 if cells:
                     cells.append("Pinellas")
                     data_rows.append(cells)
-                    # Flag surplus if column 6 has a value > 0
                     if len(cells) > 6:
                         bal = str(cells[6]).replace("$","").replace(",","").strip()
                         try:
@@ -308,39 +327,18 @@ def scrape_tax_deeds_and_surplus():
                         except Exception:
                             pass
 
-            td_added = sf_added = 0
+            td = sf = 0
             if len(data_rows) > 1:
                 print(f"  📥 {len(data_rows)-1} tax deed records")
-                td_added = sheets_helper.append_rows_deduplicated(
+                td = sheets_helper.append_rows_deduplicated(
                     config.SHEETS["tax_deeds"], data_rows, case_col_index=2)
             if len(surplus_rows) > 1:
-                print(f"  💰 {len(surplus_rows)-1} surplus fund records")
-                sf_added = sheets_helper.append_rows_deduplicated(
+                print(f"  💰 {len(surplus_rows)-1} surplus records")
+                sf = sheets_helper.append_rows_deduplicated(
                     config.SHEETS["surplus_funds"], surplus_rows, case_col_index=2)
-
-            return td_added + sf_added
+            return td + sf
 
     except Exception as e:
         print(f"  ⚠️  realtdm failed: {e}")
 
-    print("  ⚠️  Tax deed site may block scrapers — check manually at pinellas.realtdm.com")
-    return 0
-
-
-# ─────────────────────────────────────────────────────────────
-# BONUS: NEW CASE FILINGS (Civil — catches judgments + more)
-# ─────────────────────────────────────────────────────────────
-
-def scrape_new_case_filings():
-    """
-    NEW_CASE_FILINGS_DAILY catches civil judgments, small claims,
-    and other case types not in Lis Pendens or Evictions.
-    """
-    print("\n🔵 New Civil Case Filings...")
-    url = "https://publicfiles.mypinellasclerk.gov/download/CIVIL/NEW_CASE_FILINGS_DAILY/"
-    rows = fetch_csv_from_directory(url, r"Odyssey-JobOutput.*\.csv")
-    if rows:
-        return sheets_helper.append_rows_deduplicated(
-            config.SHEETS["judgments"], rows, case_col_index=3)
-    print("  ❌ No data")
     return 0
