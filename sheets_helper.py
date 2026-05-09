@@ -1,76 +1,87 @@
+# ================================================================
+# SHEETS HELPER
+# All Google Sheets operations go through here.
+# Uses spreadsheet ID (not name) for reliability.
+# ================================================================
+
 import gspread
 from google.oauth2.service_account import Credentials
 import config
 
-_client = None
+_clients = {}  # cache per credentials file
+
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive",
+]
+
 
 def get_client():
-    global _client
-    if _client is None:
+    if "main" not in _clients:
         creds = Credentials.from_service_account_file(
-            config.GOOGLE_CREDENTIALS_FILE,
-            scopes=[
-                "https://www.googleapis.com/auth/spreadsheets",
-                "https://www.googleapis.com/auth/drive"
-            ]
-        )
-        _client = gspread.authorize(creds)
-    return _client
+            config.GOOGLE_CREDENTIALS_FILE, scopes=SCOPES)
+        _clients["main"] = gspread.authorize(creds)
+    return _clients["main"]
 
-def get_sheet(tab_name):
+
+def open_sheet(sheet_id, tab_name):
+    """Open a specific tab by spreadsheet ID and tab name."""
     client = get_client()
-    return client.open(config.SPREADSHEET_NAME).worksheet(tab_name)
+    return client.open_by_key(sheet_id).worksheet(tab_name)
 
-def get_existing_case_numbers(tab_name, case_col_index=2):
-    """Returns a set of case numbers already in a sheet tab to prevent duplicates."""
+
+def get_existing_values(sheet_id, tab_name, col_index=1):
+    """Return a set of values from one column (for deduplication)."""
     try:
-        sheet = get_sheet(tab_name)
-        col_values = sheet.col_values(case_col_index)
-        return set(col_values[1:])  # skip header
+        ws = open_sheet(sheet_id, tab_name)
+        vals = ws.col_values(col_index)
+        return set(vals[1:])  # skip header
     except Exception as e:
-        print(f"⚠️  Could not read existing case numbers: {e}")
+        print("  Could not read existing values from " + tab_name + ": " + str(e))
         return set()
 
-def append_rows_deduplicated(tab_name, rows, case_col_index=2):
+
+def append_new_rows(sheet_id, tab_name, rows, dedup_col=1):
     """
-    Appends rows to sheet only if the case number isn't already present.
-    Skips duplicate rows and header rows mixed into data.
-    Returns count of new rows added.
+    Appends rows to a sheet tab, skipping duplicates.
+    rows[0] must be the header row.
+    dedup_col is 1-indexed column used for deduplication.
+    Returns count of rows actually added.
     """
-    if not rows:
+    if not rows or len(rows) < 2:
         return 0
 
-    sheet = get_sheet(tab_name)
-    existing = get_existing_case_numbers(tab_name, case_col_index)
-
-    header = rows[0]
+    header   = rows[0]
+    existing = get_existing_values(sheet_id, tab_name, dedup_col)
     new_rows = []
 
     for row in rows[1:]:
-        # Skip blank rows or rows that look like headers
-        if not any(row):
-            continue
-        if row[0] == header[0]:  # Header repeated in data — skip
-            continue
+        if not any(str(c).strip() for c in row):
+            continue  # skip blank rows
+        if row[0] == header[0]:
+            continue  # skip repeated header rows in data
 
-        # Deduplicate by case number
-        if len(row) >= case_col_index:
-            case_num = row[case_col_index - 1]
-            if case_num and case_num in existing:
-                continue
-            existing.add(case_num)
-
+        # Dedup check
+        key = str(row[dedup_col - 1]).strip() if len(row) >= dedup_col else ""
+        if key and key in existing:
+            continue
+        existing.add(key)
         new_rows.append(row)
 
     if new_rows:
-        sheet.append_rows(new_rows, value_input_option="USER_ENTERED")
+        ws = open_sheet(sheet_id, tab_name)
+        ws.append_rows(new_rows, value_input_option="USER_ENTERED")
+        print("  + " + str(len(new_rows)) + " rows → " + tab_name)
 
-    print(f"  ✅ {len(new_rows)} new rows → {tab_name}")
     return len(new_rows)
 
-def ensure_header(tab_name, header_row):
-    """Makes sure the first row of a sheet is the correct header."""
-    sheet = get_sheet(tab_name)
-    existing = sheet.row_values(1)
-    if existing != header_row:
-        sheet.insert_row(header_row, 1)
+
+def read_all_rows(sheet_id, tab_name):
+    """Read all rows from a tab. Returns [] if tab missing or empty."""
+    try:
+        ws   = open_sheet(sheet_id, tab_name)
+        rows = ws.get_all_values()
+        return rows if len(rows) >= 2 else []
+    except Exception as e:
+        print("  Skipping " + tab_name + ": " + str(e))
+        return []
