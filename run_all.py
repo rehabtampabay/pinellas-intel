@@ -1,15 +1,17 @@
-import json
-import os
-import sys
-import smtplib
-import gspread
+# ================================================================
+# FL PROPERTY INTEL — MASTER RUNNER
+# Runs all active county scrapers, writes leads.json for dashboard.
+# Schedule: weekdays at 2pm EST (19:00 UTC)
+# ================================================================
+
+import json, os, sys, smtplib, random
 from datetime import datetime
 from email.message import EmailMessage
-from google.oauth2.service_account import Credentials
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import config
+import sheets_helper
 from scrapers.pinellas import (
     scrape_lis_pendens,
     scrape_probate,
@@ -19,226 +21,23 @@ from scrapers.pinellas import (
 )
 
 
-def safe_run(name, fn):
+def safe(name, fn):
     try:
-        result = fn()
-        return result or 0
+        r = fn()
+        return r or 0
     except Exception as e:
         print("FAILED " + name + ": " + str(e))
         return 0
 
 
-def get_sheet_records(tab_name, max_rows=200):
-    """Pull actual records from a Google Sheet tab."""
-    try:
-        creds = Credentials.from_service_account_file(
-            config.GOOGLE_CREDENTIALS_FILE,
-            scopes=[
-                "https://www.googleapis.com/auth/spreadsheets",
-                "https://www.googleapis.com/auth/drive"
-            ]
-        )
-        client = gspread.authorize(creds)
-        sheet = client.open(config.SPREADSHEET_NAME).worksheet(tab_name)
-        all_rows = sheet.get_all_values()
-        if len(all_rows) < 2:
-            return []
-        headers = all_rows[0]
-        records = []
-        for row in all_rows[1:max_rows]:
-            record = {}
-            for i, h in enumerate(headers):
-                record[h] = row[i] if i < len(row) else ""
-            records.append(record)
-        return records
-    except Exception as e:
-        print("Could not read " + tab_name + ": " + str(e))
-        return []
+def run_pinellas():
+    print("\n── PINELLAS ──────────────────────────────")
+    sheet_id = config.COUNTIES["pinellas"]["sheet_id"]
+    results  = {}
 
-
-def write_dashboard_json(results, total_new):
-    """
-    Writes leads.json with both summary counts AND actual lead records
-    so the dashboard can display full details.
-    """
-    os.makedirs("data", exist_ok=True)
-
-    # Pull actual records from each sheet tab
-    lead_records = []
-
-    signal_map = {
-        "lis_pendens":    (config.SHEETS["lis_pendens"],    "LIS PENDENS",    "#ef4444", 80),
-        "probate":        (config.SHEETS["probate"],        "PROBATE",        "#a78bfa", 80),
-        "evictions":      (config.SHEETS["evictions"],      "EVICTION",       "#f59e0b", 80),
-        "mechanic_liens": (config.SHEETS["mechanic_liens"], "MECH LIEN",      "#f97316", 80),
-        "judgments":      (config.SHEETS["judgments"],      "JUDGMENT",       "#14b8a6", 80),
-        "tax_deeds":      (config.SHEETS["tax_deeds"],      "TAX DEED",       "#22c55e", 80),
-    }
-
-    base_scores = {
-        "lis_pendens": 40, "probate": 35, "tax_deeds": 35,
-        "mechanic_liens": 20, "judgments": 20, "evictions": 15,
-    }
-
-    for sig_key, (tab, label, color, limit) in signal_map.items():
-        records = get_sheet_records(tab, max_rows=limit)
-        for rec in records:
-            # Build a unified lead object from whatever columns exist
-            lead = build_lead_object(rec, sig_key, label, color, base_scores[sig_key])
-            lead_records.append(lead)
-
-    # Sort by score descending
-    lead_records.sort(key=lambda x: x.get("score", 0), reverse=True)
-
-    payload = {
-        "updated": datetime.now().strftime("%Y-%m-%d %H:%M UTC"),
-        "county": "Pinellas",
-        "total_new": total_new,
-        "total_records": len(lead_records),
-        "breakdown": {
-            "lis_pendens":    results.get("lis_pendens", 0),
-            "probate":        results.get("probate", 0),
-            "evictions":      results.get("evictions", 0),
-            "mechanic_liens": results.get("mechanic_liens", 0),
-            "judgments":      results.get("judgments", 0),
-            "tax_deeds":      results.get("tax_deeds", 0),
-        },
-        "leads": lead_records
-    }
-
-    with open("data/leads.json", "w") as f:
-        json.dump(payload, f, indent=2)
-
-    print("Dashboard JSON updated: " + str(len(lead_records)) + " records written")
-
-
-def build_lead_object(rec, sig_key, label, color, base_score):
-    """
-    Normalizes a sheet row into a unified lead object.
-    Handles different column names across sheet tabs.
-    """
-    import random
-
-    # Try to extract name from various column names
-    name = (
-        rec.get("Style") or
-        rec.get("Name") or
-        rec.get("Party Name") or
-        rec.get("Grantor") or
-        rec.get("name") or
-        rec.get("Owner") or
-        "—"
-    )
-
-    # Case number
-    case_num = (
-        rec.get("Case #") or
-        rec.get("Case Number") or
-        rec.get("instrument") or
-        rec.get("Instrument Number") or
-        rec.get("Case") or
-        "—"
-    )
-
-    # Address
-    address = (
-        rec.get("Address") or
-        rec.get("Property Address") or
-        rec.get("address") or
-        "—"
-    )
-
-    # Date
-    date_filed = (
-        rec.get("Date/Time Enter") or
-        rec.get("Date Filed") or
-        rec.get("date_filed") or
-        rec.get("Date Created") or
-        rec.get("Filing Date") or
-        "—"
-    )
-
-    # Case type / doc type
-    case_type = (
-        rec.get("Case Type") or
-        rec.get("doc_type") or
-        rec.get("Document Type") or
-        rec.get("Style") or
-        ""
-    )
-
-    # Amount
-    amount = (
-        rec.get("Amount") or
-        rec.get("Opening Bid") or
-        rec.get("Surplus Balance") or
-        ""
-    )
-
-    # Score: base + small random variance for visual interest
-    score = min(base_score + random.randint(0, 20), 100)
-    heat = "hot" if score >= 60 else "warm" if score >= 40 else "cold"
-
-    return {
-        "signal":    sig_key,
-        "label":     label,
-        "color":     color,
-        "name":      name[:60] if name else "—",
-        "case":      case_num[:30] if case_num else "—",
-        "address":   address[:60] if address else "—",
-        "date":      date_filed[:20] if date_filed else "—",
-        "case_type": case_type[:50] if case_type else "",
-        "amount":    amount[:20] if amount else "",
-        "score":     score,
-        "heat":      heat,
-        "county":    "Pinellas",
-    }
-
-
-def send_summary(results, total_new, elapsed):
-    if not config.EMAIL_PASSWORD:
-        return
-    lines = [
-        "Pinellas Intel - " + datetime.now().strftime("%Y-%m-%d") + " Run Summary",
-        "",
-        "Total new leads added today: " + str(total_new),
-        "Runtime: " + str(elapsed) + "s",
-        "",
-        "  Lis Pendens:     " + str(results.get("lis_pendens", 0)),
-        "  Probate:         " + str(results.get("probate", 0)),
-        "  Evictions:       " + str(results.get("evictions", 0)),
-        "  Mechanic Liens:  " + str(results.get("mechanic_liens", 0)),
-        "  Judgments:       " + str(results.get("judgments", 0)),
-        "  Tax Deeds:       " + str(results.get("tax_deeds", 0)),
-        "",
-        "View dashboard: https://rehabtampabay.github.io/pinellas-intel",
-    ]
-    try:
-        msg = EmailMessage()
-        msg.set_content("\n".join(lines))
-        msg["Subject"] = "Pinellas Intel - " + str(total_new) + " new leads added today"
-        msg["From"] = config.ALERT_EMAIL
-        msg["To"] = config.ALERT_EMAIL
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.starttls()
-            server.login(config.ALERT_EMAIL, config.EMAIL_PASSWORD)
-            server.send_message(msg)
-        print("Email sent to " + config.ALERT_EMAIL)
-    except Exception as e:
-        print("Email failed: " + str(e))
-
-
-def main():
-    start = datetime.now()
-    print("=" * 50)
-    print("PINELLAS INTEL - " + start.strftime("%Y-%m-%d %H:%M"))
-    print("=" * 50)
-
-    results = {}
-
-    results["lis_pendens"] = safe_run("lis_pendens", scrape_lis_pendens)
-    results["probate"]     = safe_run("probate",     scrape_probate)
-    results["evictions"]   = safe_run("evictions",   scrape_evictions)
+    results["lis_pendens"] = safe("lis_pendens", scrape_lis_pendens)
+    results["probate"]     = safe("probate",     scrape_probate)
+    results["evictions"]   = safe("evictions",   scrape_evictions)
 
     try:
         liens, judgments, tax_deeds = scrape_official_records_index()
@@ -251,19 +50,192 @@ def main():
         results["judgments"]      = 0
         results["tax_deeds"]      = 0
 
-    td_extra = safe_run("tax_deeds_site", scrape_tax_deeds_and_surplus)
-    results["tax_deeds"] = results.get("tax_deeds", 0) + td_extra
+    results["tax_deeds"] = results.get("tax_deeds", 0) + safe(
+        "tax_deeds_site", scrape_tax_deeds_and_surplus)
 
-    total_new = sum(results.values())
-    elapsed   = (datetime.now() - start).seconds
+    return results
 
-    # Always write dashboard even if 0 new leads today
-    # so dashboard shows all historical records from sheets
-    write_dashboard_json(results, total_new)
-    send_summary(results, total_new, elapsed)
+
+def load_all_leads():
+    """
+    Read every historical record from every active county sheet.
+    Returns list of unified lead dicts for the dashboard.
+    """
+    all_leads = []
+
+    for county_key, county in config.COUNTIES.items():
+        if not county["active"]:
+            continue
+
+        print("\nLoading " + county["name"] + " records...")
+        sheet_id = county["sheet_id"]
+
+        for sig_key, tab_name in config.TABS.items():
+            if sig_key == "dashboard":
+                continue
+
+            rows = sheets_helper.read_all_rows(sheet_id, tab_name)
+            if not rows:
+                continue
+
+            headers = rows[0]
+            label   = config.SIGNAL_LABELS.get(sig_key, sig_key.upper())
+            color   = config.SIGNAL_COLORS.get(sig_key, "#64748b")
+            base    = config.SIGNAL_SCORES.get(sig_key, 15)
+
+            for row in rows[1:]:
+                rec  = {headers[i]: row[i] for i in range(min(len(headers), len(row)))}
+                lead = normalize_lead(rec, sig_key, label, color, base, county["name"])
+                all_leads.append(lead)
+
+        print(county["name"] + ": " + str(len([l for l in all_leads if l["county"] == county["name"]])) + " total records")
+
+    return all_leads
+
+
+def normalize_lead(rec, sig_key, label, color, base_score, county_name):
+    """Turn any sheet row into a clean unified lead dict."""
+    name = (rec.get("Style") or rec.get("Name") or rec.get("Party Name") or
+            rec.get("Grantor") or rec.get("name") or rec.get("Owner") or "—")
+
+    case_num = (rec.get("Case #") or rec.get("Case Number") or
+                rec.get("instrument") or rec.get("Instrument Number") or "—")
+
+    address = (rec.get("Address") or rec.get("Property Address") or
+               rec.get("address") or "—")
+
+    date_filed = (rec.get("Date/Time Enter") or rec.get("Date Filed") or
+                  rec.get("date_filed") or rec.get("Date Created") or
+                  rec.get("Filing Date") or "—")
+
+    case_type = (rec.get("Case Type") or rec.get("doc_type") or
+                 rec.get("Document Type") or "")
+
+    amount = (rec.get("Amount") or rec.get("Opening Bid") or
+              rec.get("Surplus Balance") or "")
+
+    score = min(base_score + random.randint(0, 18), 100)
+    heat  = "hot" if score >= config.HOT_LEAD_THRESHOLD else \
+            "warm" if score >= 40 else "cold"
+
+    return {
+        "signal":    sig_key,
+        "label":     label,
+        "color":     color,
+        "name":      str(name)[:80],
+        "case":      str(case_num)[:40],
+        "address":   str(address)[:80],
+        "date":      str(date_filed)[:25],
+        "case_type": str(case_type)[:60],
+        "amount":    str(amount)[:25],
+        "score":     score,
+        "heat":      heat,
+        "county":    county_name,
+    }
+
+
+def write_dashboard_json(county_results, total_new, all_leads):
+    os.makedirs("data", exist_ok=True)
+
+    all_leads.sort(key=lambda x: x["score"], reverse=True)
+    hot = sum(1 for l in all_leads if l["heat"] == "hot")
+
+    # Per-county breakdown for dashboard
+    by_county = {}
+    for county_key, county in config.COUNTIES.items():
+        if not county["active"]:
+            continue
+        name = county["name"]
+        leads = [l for l in all_leads if l["county"] == name]
+        by_county[name] = {
+            "total": len(leads),
+            "new_today": sum(county_results.get(county_key, {}).values()),
+            "breakdown": {
+                sig: len([l for l in leads if l["signal"] == sig])
+                for sig in config.SIGNAL_LABELS
+            }
+        }
+
+    payload = {
+        "updated":       datetime.now().strftime("%Y-%m-%d %H:%M UTC"),
+        "total_new":     total_new,
+        "total_records": len(all_leads),
+        "hot_count":     hot,
+        "by_county":     by_county,
+        "leads":         all_leads,
+    }
+
+    with open("data/leads.json", "w") as f:
+        json.dump(payload, f, indent=2)
+
+    print("\nDashboard: " + str(len(all_leads)) + " records | " +
+          str(hot) + " hot | " + str(total_new) + " new today")
+
+
+def send_email(county_results, total_new, elapsed, total_records):
+    if not config.EMAIL_PASSWORD:
+        return
+    lines = [
+        "FL Property Intel — " + datetime.now().strftime("%Y-%m-%d"),
+        "",
+        "New leads added:  " + str(total_new),
+        "Total on file:    " + str(total_records),
+        "Runtime:          " + str(elapsed) + "s",
+        "",
+    ]
+    for county_key, results in county_results.items():
+        county_name = config.COUNTIES[county_key]["name"]
+        lines.append("── " + county_name + " ──")
+        for sig, count in results.items():
+            label = config.SIGNAL_LABELS.get(sig, sig)
+            lines.append("  " + label.ljust(15) + str(count))
+        lines.append("")
+
+    lines.append("Dashboard: https://rehabtampabay.github.io/pinellas-intel")
+
+    try:
+        msg = EmailMessage()
+        msg.set_content("\n".join(lines))
+        msg["Subject"] = "FL Intel — " + str(total_new) + " new | " + str(total_records) + " on file"
+        msg["From"] = config.ALERT_EMAIL
+        msg["To"]   = config.ALERT_EMAIL
+        with smtplib.SMTP("smtp.gmail.com", 587) as s:
+            s.starttls()
+            s.login(config.ALERT_EMAIL, config.EMAIL_PASSWORD)
+            s.send_message(msg)
+        print("Email sent")
+    except Exception as e:
+        print("Email failed: " + str(e))
+
+
+def main():
+    start = datetime.now()
+    print("=" * 50)
+    print("FL PROPERTY INTEL — " + start.strftime("%Y-%m-%d %H:%M"))
+    print("=" * 50)
+
+    county_results = {}
+
+    # Pinellas (active)
+    if config.COUNTIES["pinellas"]["active"]:
+        county_results["pinellas"] = run_pinellas()
+
+    # Hillsborough — scraper coming next, sheet ready
+    # if config.COUNTIES["hillsborough"]["active"]:
+    #     county_results["hillsborough"] = run_hillsborough()
+
+    total_new = sum(sum(r.values()) for r in county_results.values())
+
+    print("\nReading all historical records...")
+    all_leads = load_all_leads()
+
+    elapsed = (datetime.now() - start).seconds
+    write_dashboard_json(county_results, total_new, all_leads)
+    send_email(county_results, total_new, elapsed, len(all_leads))
 
     print("=" * 50)
-    print("DONE - " + str(total_new) + " new leads in " + str(elapsed) + "s")
+    print("DONE — " + str(total_new) + " new | " +
+          str(len(all_leads)) + " total | " + str(elapsed) + "s")
     print("=" * 50)
 
 
