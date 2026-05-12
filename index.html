@@ -4,551 +4,187 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Pinellas Intel · Property Intelligence</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:         #0b0e14;
-    --surface:    #111520;
-    --border:     #1e2535;
-    --border2:    #2a3248;
-    --text:       #e2e8f0;
-    --muted:      #5a6580;
-    --accent:     #3b82f6;
-    --hot:        #ef4444;
-    --warm:       #f59e0b;
-    --cold:       #64748b;
-    --green:      #22c55e;
-    --purple:     #a78bfa;
-    --orange:     #f97316;
-    --teal:       #14b8a6;
-    --mono:       'Space Mono', monospace;
-    --sans:       'DM Sans', sans-serif;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 14px;
-    min-height: 100vh;
-  }
-
-  /* Grid noise overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* ── TOP BAR ── */
-  .topbar {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: rgba(11,14,20,0.95);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 28px;
-    height: 56px;
-  }
-
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .brand-icon {
-    width: 32px; height: 32px;
-    background: linear-gradient(135deg, var(--accent), #6366f1);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px;
-  }
-
-  .brand-name {
-    font-family: var(--mono);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    color: var(--text);
-  }
-
-  .brand-sub {
-    font-size: 11px;
-    color: var(--muted);
-    font-family: var(--mono);
-    letter-spacing: 0.08em;
-  }
-
-  .topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-  }
-
-  .stat-pill {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    line-height: 1.2;
-  }
-
-  .stat-pill .val {
-    font-family: var(--mono);
-    font-size: 18px;
-    font-weight: 700;
-  }
-
-  .stat-pill .lbl {
-    font-size: 9px;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .val.hot { color: var(--hot); }
-  .val.blue { color: var(--accent); }
-
-  .refresh-btn {
-    background: var(--border);
-    border: 1px solid var(--border2);
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 7px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    letter-spacing: 0.05em;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .refresh-btn:hover {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
-  }
-
-  /* ── MAIN LAYOUT ── */
-  .layout {
-    display: flex;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* ── SIDEBAR ── */
-  .sidebar {
-    width: 220px;
-    min-height: calc(100vh - 56px);
-    border-right: 1px solid var(--border);
-    padding: 20px 0;
-    flex-shrink: 0;
-    position: sticky;
-    top: 56px;
-    height: calc(100vh - 56px);
-    overflow-y: auto;
-  }
-
-  .sidebar-section {
-    padding: 0 16px 16px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 16px;
-  }
-
-  .sidebar-label {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 0.15em;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-
-  .filter-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 7px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-bottom: 2px;
-    transition: background 0.15s;
-    font-size: 13px;
-  }
-
-  .filter-item:hover { background: var(--surface); }
-  .filter-item.active { background: var(--surface); border: 1px solid var(--border2); }
-
-  .filter-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    margin-right: 8px;
-  }
-
-  .filter-left {
-    display: flex;
-    align-items: center;
-  }
-
-  .badge {
-    background: var(--border);
-    color: var(--muted);
-    font-family: var(--mono);
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 4px;
-  }
-
-  .badge.hot-badge { background: rgba(239,68,68,0.15); color: var(--hot); }
-
-  /* ── CONTENT ── */
-  .content {
-    flex: 1;
-    padding: 24px 28px;
-    min-width: 0;
-  }
-
-  /* ── METRIC CARDS ── */
-  .metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 12px;
-    margin-bottom: 28px;
-  }
-
-  .metric-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px 20px;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.2s;
-  }
-
-  .metric-card:hover { border-color: var(--border2); }
-
-  .metric-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 3px; height: 100%;
-    background: var(--card-accent, var(--accent));
-  }
-
-  .metric-label {
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    font-family: var(--mono);
-  }
-
-  .metric-value {
-    font-family: var(--mono);
-    font-size: 32px;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--text);
-  }
-
-  .metric-sub {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 6px;
-  }
-
-  /* ── SIGNAL CARDS ── */
-  .signals-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 16px;
-    margin-bottom: 32px;
-  }
-
-  .signal-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    transition: all 0.2s;
-    cursor: pointer;
-  }
-
-  .signal-card:hover {
-    border-color: var(--border2);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  }
-
-  .signal-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 10px;
-  }
-
-  .signal-icon { font-size: 20px; }
-
-  .signal-status {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 10px;
-    color: var(--green);
-    font-family: var(--mono);
-    letter-spacing: 0.05em;
-  }
-
-  .status-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-
-  .signal-name {
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .signal-desc {
-    font-size: 11px;
-    color: var(--muted);
-    line-height: 1.5;
-  }
-
-  .signal-count {
-    font-family: var(--mono);
-    font-size: 28px;
-    font-weight: 700;
-    margin-top: 12px;
-    color: var(--text);
-  }
-
-  .signal-count span {
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 400;
-  }
-
-  /* ── LEAD TABLE ── */
-  .table-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-  }
-
-  .table-title {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    color: var(--muted);
-    text-transform: uppercase;
-  }
-
-  .table-wrap {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  thead {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-  }
-
-  th {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding: 10px 14px;
-    text-align: left;
-    font-weight: 400;
-  }
-
-  td {
-    padding: 10px 14px;
-    font-size: 12px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text);
-  }
-
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255,255,255,0.02); }
-
-  .heat-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-family: var(--mono);
-    font-size: 10px;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-weight: 700;
-  }
-
-  .heat-hot  { background: rgba(239,68,68,0.15);  color: var(--hot); }
-  .heat-warm { background: rgba(245,158,11,0.15); color: var(--warm); }
-  .heat-cold { background: rgba(100,116,139,0.1); color: var(--cold); }
-
-  .score-bar-wrap {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .score-bar {
-    height: 4px;
-    border-radius: 2px;
-    background: var(--border);
-    width: 50px;
-    overflow: hidden;
-  }
-
-  .score-fill {
-    height: 100%;
-    border-radius: 2px;
-    background: linear-gradient(90deg, var(--accent), var(--hot));
-    transition: width 0.5s ease;
-  }
-
-  .score-num {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    min-width: 24px;
-  }
-
-  .county-tag {
-    font-family: var(--mono);
-    font-size: 9px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    background: rgba(59,130,246,0.12);
-    color: var(--accent);
-    letter-spacing: 0.06em;
-  }
-
-  /* ── LAST UPDATED ── */
-  .last-updated {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.08em;
-  }
-
-  /* ── TABS ── */
-  .tabs {
-    display: flex;
-    gap: 0;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 24px;
-    overflow-x: auto;
-  }
-
-  .tab {
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 10px 18px;
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-    color: var(--muted);
-    letter-spacing: 0.06em;
-    white-space: nowrap;
-    transition: all 0.15s;
-  }
-
-  .tab:hover { color: var(--text); }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-  .tab-count {
-    background: var(--border);
-    font-size: 9px;
-    padding: 1px 5px;
-    border-radius: 3px;
-    margin-left: 5px;
-  }
-
-  /* ── LOADING ── */
-  #loading {
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 999;
-    gap: 16px;
-    transition: opacity 0.4s;
-  }
-
-  .spinner {
-    width: 36px; height: 36px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  #loading p {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-  }
-
-  /* ── RESPONSIVE ── */
-  @media (max-width: 768px) {
-    .sidebar { display: none; }
-    .content { padding: 16px; }
-    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-  }
+:root {
+  --bg:#0b0e14; --surface:#111520; --border:#1e2535; --border2:#2a3248;
+  --text:#e2e8f0; --muted:#5a6580; --accent:#3b82f6; --hot:#ef4444;
+  --warm:#f59e0b; --cold:#64748b; --green:#22c55e; --purple:#a78bfa;
+  --orange:#f97316; --teal:#14b8a6; --mono:'Space Mono',monospace;
+  --sans:'DM Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(59,130,246,.03) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(59,130,246,.03) 1px,transparent 1px);
+  background-size:40px 40px;}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(11,14,20,.96);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-icon{width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,var(--accent),#6366f1);
+  display:flex;align-items:center;justify-content:center;font-size:16px;}
+.brand-name{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.05em;}
+.brand-sub{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em;}
+.topbar-right{display:flex;align-items:center;gap:20px;}
+.stat-pill{display:flex;flex-direction:column;align-items:center;line-height:1.2;}
+.stat-pill .val{font-family:var(--mono);font-size:20px;font-weight:700;}
+.stat-pill .lbl{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+.val.blue{color:var(--accent);}.val.hot{color:var(--hot);}.val.amber{color:var(--warm);}
+.refresh-btn{background:var(--border);border:1px solid var(--border2);color:var(--text);
+  font-family:var(--mono);font-size:11px;padding:7px 14px;border-radius:6px;
+  cursor:pointer;letter-spacing:.05em;transition:all .2s;}
+.refresh-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+/* LAYOUT */
+.layout{display:flex;position:relative;z-index:1;}
+
+/* SIDEBAR */
+.sidebar{width:210px;min-height:calc(100vh - 56px);border-right:1px solid var(--border);
+  padding:16px 0;flex-shrink:0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;}
+.sb-section{padding:0 12px 14px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+.sb-label{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--muted);
+  text-transform:uppercase;margin-bottom:8px;}
+.fi{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;
+  border-radius:6px;cursor:pointer;margin-bottom:2px;font-size:12px;
+  transition:background .15s;border:1px solid transparent;}
+.fi:hover{background:var(--surface);}
+.fi.active{background:var(--surface);border-color:var(--border2);}
+.fl{display:flex;align-items:center;gap:7px;}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.badge{background:var(--border);color:var(--muted);font-family:var(--mono);
+  font-size:10px;padding:1px 5px;border-radius:3px;}
+.badge.live{background:rgba(34,197,94,.12);color:var(--green);}
+.badge.soon{background:var(--border);color:var(--muted);opacity:.5;}
+
+/* CONTENT */
+.content{flex:1;padding:20px 24px;min-width:0;}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;}
+.tab{font-family:var(--mono);font-size:11px;padding:9px 16px;border-bottom:2px solid transparent;
+  cursor:pointer;color:var(--muted);letter-spacing:.06em;transition:all .15s;}
+.tab:hover{color:var(--text);}.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* METRIC CARDS */
+.metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:20px;}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:14px 16px;position:relative;overflow:hidden;}
+.mc::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--ca,var(--accent));}
+.mc-label{font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;
+  margin-bottom:5px;font-family:var(--mono);}
+.mc-val{font-family:var(--mono);font-size:26px;font-weight:700;}
+.mc-sub{font-size:10px;color:var(--muted);margin-top:3px;}
+
+/* CONTROLS */
+.controls{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.search-box{background:var(--surface);border:1px solid var(--border);color:var(--text);
+  font-size:13px;padding:8px 12px;border-radius:6px;outline:none;flex:1;min-width:220px;}
+.search-box:focus{border-color:var(--accent);}
+.search-box::placeholder{color:var(--muted);}
+select.ctl{background:var(--surface);border:1px solid var(--border);color:var(--text);
+  font-family:var(--mono);font-size:10px;padding:6px 8px;border-radius:5px;outline:none;}
+.rec-count{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto;}
+.updated-tag{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:10px;}
+
+/* TABLE */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+thead{background:var(--bg);border-bottom:1px solid var(--border);}
+th{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);padding:9px 12px;text-align:left;font-weight:400;
+  cursor:pointer;white-space:nowrap;user-select:none;}
+th:hover{color:var(--text);}
+td{padding:9px 12px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+
+/* DETAIL PANEL */
+.row-link{cursor:pointer;}
+
+/* CELL STYLES */
+.sig-tag{display:inline-block;font-family:var(--mono);font-size:9px;padding:3px 6px;
+  border-radius:3px;letter-spacing:.05em;font-weight:700;white-space:nowrap;}
+.heat-badge{display:inline-flex;align-items:center;gap:3px;font-family:var(--mono);
+  font-size:9px;padding:3px 7px;border-radius:4px;font-weight:700;}
+.heat-hot{background:rgba(239,68,68,.15);color:var(--hot);}
+.heat-warm{background:rgba(245,158,11,.15);color:var(--warm);}
+.heat-cold{background:rgba(100,116,139,.1);color:var(--cold);}
+.score-wrap{display:flex;align-items:center;gap:5px;}
+.score-bar{height:3px;width:44px;background:var(--border);border-radius:2px;overflow:hidden;}
+.score-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--hot));}
+.score-num{font-family:var(--mono);font-size:10px;color:var(--muted);min-width:22px;}
+.county-tag{font-family:var(--mono);font-size:9px;padding:2px 5px;border-radius:3px;
+  background:rgba(59,130,246,.1);color:var(--accent);}
+.name-main{font-weight:600;font-size:12px;}
+.name-vs{font-size:10px;color:var(--muted);margin-top:1px;}
+.case-cell{font-family:var(--mono);font-size:10px;color:var(--muted);}
+.type-cell{font-size:10px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* PAGINATION */
+.pagination{display:flex;align-items:center;justify-content:center;gap:6px;padding:14px;}
+.pg-btn{background:var(--border);border:1px solid var(--border2);color:var(--text);
+  font-family:var(--mono);font-size:10px;padding:5px 10px;border-radius:4px;
+  cursor:pointer;transition:all .15s;}
+.pg-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff;}
+.pg-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.pg-btn:disabled{opacity:.3;cursor:default;}
+.pg-info{font-family:var(--mono);font-size:10px;color:var(--muted);}
+.empty{text-align:center;padding:60px;color:var(--muted);font-family:var(--mono);font-size:11px;}
+
+/* DETAIL PANEL */
+.detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;backdrop-filter:blur(4px);}
+.detail-panel{position:absolute;right:0;top:0;bottom:0;width:380px;background:var(--surface);
+  border-left:1px solid var(--border);padding:24px;overflow-y:auto;}
+.dp-close{position:absolute;top:16px;right:16px;background:var(--border);border:none;
+  color:var(--text);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;}
+.dp-signal{font-family:var(--mono);font-size:10px;letter-spacing:.1em;margin-bottom:8px;}
+.dp-name{font-size:18px;font-weight:700;margin-bottom:4px;line-height:1.3;}
+.dp-defendant{font-size:13px;color:var(--accent);margin-bottom:16px;}
+.dp-section{margin-bottom:20px;}
+.dp-section-title{font-family:var(--mono);font-size:9px;letter-spacing:.15em;
+  color:var(--muted);text-transform:uppercase;margin-bottom:10px;
+  border-bottom:1px solid var(--border);padding-bottom:6px;}
+.dp-row{display:flex;justify-content:space-between;align-items:flex-start;
+  padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03);}
+.dp-key{font-size:11px;color:var(--muted);}
+.dp-val{font-size:11px;font-weight:500;text-align:right;max-width:220px;}
+.dp-score-big{font-family:var(--mono);font-size:36px;font-weight:700;color:var(--warm);}
+.dp-heat{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;
+  border-radius:6px;font-family:var(--mono);font-size:11px;font-weight:700;margin-top:4px;}
+.skip-btn{display:block;width:100%;margin-top:16px;padding:10px;border-radius:8px;
+  background:var(--accent);border:none;color:#fff;font-family:var(--mono);
+  font-size:11px;cursor:pointer;letter-spacing:.05em;transition:all .2s;}
+.skip-btn:hover{background:#2563eb;}
+
+/* LOADING */
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:999;gap:14px;transition:opacity .4s;}
+.spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#loading p{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.1em;}
+
+@media(max-width:768px){.sidebar{display:none;}.content{padding:12px;}}
 </style>
 </head>
 <body>
 
-<div id="loading">
-  <div class="spinner"></div>
-  <p>LOADING INTEL...</p>
+<div id="loading"><div class="spinner"></div><p>LOADING INTEL...</p></div>
+
+<!-- DETAIL OVERLAY -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetail(event)">
+  <div class="detail-panel" id="detail-panel">
+    <button class="dp-close" onclick="closeDetail()">✕</button>
+    <div id="dp-content"></div>
+  </div>
 </div>
 
-<!-- TOP BAR -->
+<!-- TOPBAR -->
 <header class="topbar">
   <div class="brand">
     <div class="brand-icon">🏠</div>
@@ -558,440 +194,459 @@
     </div>
   </div>
   <div class="topbar-right">
-    <div class="stat-pill">
-      <span class="val blue" id="total-records">—</span>
-      <span class="lbl">RECORDS</span>
-    </div>
-    <div class="stat-pill">
-      <span class="val hot" id="hot-count">—</span>
-      <span class="lbl">HOT LEADS</span>
-    </div>
-    <div class="stat-pill">
-      <span class="val" id="avg-score" style="color:var(--warm)">—</span>
-      <span class="lbl">AVG SCORE</span>
-    </div>
+    <div class="stat-pill"><span class="val blue" id="stat-total">—</span><span class="lbl">TOTAL</span></div>
+    <div class="stat-pill"><span class="val hot" id="stat-hot">—</span><span class="lbl">HOT</span></div>
+    <div class="stat-pill"><span class="val amber" id="stat-new">—</span><span class="lbl">NEW TODAY</span></div>
     <button class="refresh-btn" onclick="loadData()">⟳ REFRESH</button>
   </div>
 </header>
 
 <div class="layout">
-
   <!-- SIDEBAR -->
   <aside class="sidebar">
-    <div class="sidebar-section">
-      <div class="sidebar-label">CATEGORIES</div>
-      <div class="filter-item active" onclick="filterSignal('all')">
-        <div class="filter-left">
-          <div class="filter-dot" style="background:var(--accent)"></div>
-          All Records
-        </div>
-        <span class="badge" id="badge-all">0</span>
+    <div class="sb-section">
+      <div class="sb-label">SIGNAL TYPE</div>
+      <div class="fi active" onclick="setFilter('signal','all',this)">
+        <div class="fl"><div class="dot" style="background:var(--accent)"></div>All Signals</div>
+        <span class="badge" id="b-all">0</span>
       </div>
-      <div class="filter-item" onclick="filterSignal('lis_pendens')">
-        <div class="filter-left">
-          <div class="filter-dot" style="background:var(--hot)"></div>
-          Lis Pendens
-        </div>
-        <span class="badge" id="badge-lis_pendens">0</span>
+      <div class="fi" onclick="setFilter('signal','lis_pendens',this)">
+        <div class="fl"><div class="dot" style="background:#ef4444"></div>Lis Pendens</div>
+        <span class="badge" id="b-lis_pendens">0</span>
       </div>
-      <div class="filter-item" onclick="filterSignal('probate')">
-        <div class="filter-left">
-          <div class="filter-dot" style="background:var(--purple)"></div>
-          Probate / Estate
-        </div>
-        <span class="badge" id="badge-probate">0</span>
+      <div class="fi" onclick="setFilter('signal','probate',this)">
+        <div class="fl"><div class="dot" style="background:#a78bfa"></div>Probate</div>
+        <span class="badge" id="b-probate">0</span>
       </div>
-      <div class="filter-item" onclick="filterSignal('evictions')">
-        <div class="filter-left">
-          <div class="filter-dot" style="background:var(--warm)"></div>
-          Evictions
-        </div>
-        <span class="badge" id="badge-evictions">0</span>
+      <div class="fi" onclick="setFilter('signal','evictions',this)">
+        <div class="fl"><div class="dot" style="background:#f59e0b"></div>Evictions</div>
+        <span class="badge" id="b-evictions">0</span>
       </div>
-      <div class="filter-item" onclick="filterSignal('mechanic_liens')">
-        <div class="filter-left">
-          <div class="filter-dot" style="background:var(--orange)"></div>
-          Mechanic Liens
-        </div>
-        <span class="badge" id="badge-mechanic_liens">0</span>
+      <div class="fi" onclick="setFilter('signal','mechanic_liens',this)">
+        <div class="fl"><div class="dot" style="background:#f97316"></div>Mechanic Liens</div>
+        <span class="badge" id="b-mechanic_liens">0</span>
       </div>
-      <div class="filter-item" onclick="filterSignal('judgments')">
-        <div class="filter-left">
-          <div class="filter-dot" style="background:var(--teal)"></div>
-          Judgments
-        </div>
-        <span class="badge" id="badge-judgments">0</span>
+      <div class="fi" onclick="setFilter('signal','judgments',this)">
+        <div class="fl"><div class="dot" style="background:#14b8a6"></div>Judgments</div>
+        <span class="badge" id="b-judgments">0</span>
       </div>
-      <div class="filter-item" onclick="filterSignal('tax_deeds')">
-        <div class="filter-left">
-          <div class="filter-dot" style="background:var(--green)"></div>
-          Tax Deeds + Surplus
-        </div>
-        <span class="badge" id="badge-tax_deeds">0</span>
+      <div class="fi" onclick="setFilter('signal','tax_deeds',this)">
+        <div class="fl"><div class="dot" style="background:#22c55e"></div>Tax Deeds</div>
+        <span class="badge" id="b-tax_deeds">0</span>
       </div>
     </div>
 
-    <div class="sidebar-section">
-      <div class="sidebar-label">HEAT FILTER</div>
-      <div class="filter-item" onclick="filterHeat('hot')">
-        <div class="filter-left">🔥 Hot Only</div>
-        <span class="badge hot-badge" id="badge-hot">0</span>
+    <div class="sb-section">
+      <div class="sb-label">HEAT</div>
+      <div class="fi active" onclick="setFilter('heat','all',this)">
+        <div class="fl">⚡ All Leads</div>
       </div>
-      <div class="filter-item" onclick="filterHeat('all')">
-        <div class="filter-left">⚡ All Leads</div>
+      <div class="fi" onclick="setFilter('heat','hot',this)">
+        <div class="fl">🔥 Hot Only (60+)</div>
+        <span class="badge" id="b-hot">0</span>
+      </div>
+      <div class="fi" onclick="setFilter('heat','warm',this)">
+        <div class="fl">⚡ Warm (40–59)</div>
       </div>
     </div>
 
-    <div class="sidebar-section">
-      <div class="sidebar-label">COUNTIES ACTIVE</div>
-      <div class="filter-item active">
-        <div class="filter-left">
-          <div class="filter-dot" style="background:var(--green)"></div>
-          Pinellas
-        </div>
-        <span class="badge" style="color:var(--green)">LIVE</span>
+    <div class="sb-section">
+      <div class="sb-label">CASE TYPE</div>
+      <div class="fi active" onclick="setFilter('casetype','all',this)">
+        <div class="fl">All Types</div>
       </div>
-      <div class="filter-item" style="opacity:0.4">
-        <div class="filter-left">
-          <div class="filter-dot" style="background:var(--muted)"></div>
-          Hillsborough
-        </div>
-        <span class="badge">SOON</span>
+      <div class="fi" onclick="setFilter('casetype','homestead',this)">
+        <div class="fl">🏠 Homestead</div>
       </div>
-      <div class="filter-item" style="opacity:0.4">
-        <div class="filter-left">
-          <div class="filter-dot" style="background:var(--muted)"></div>
-          Pasco
-        </div>
-        <span class="badge">SOON</span>
+      <div class="fi" onclick="setFilter('casetype','non-homestead',this)">
+        <div class="fl">🏢 Non-Homestead</div>
+      </div>
+      <div class="fi" onclick="setFilter('casetype','condo',this)">
+        <div class="fl">🏬 Condo/HOA</div>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">COUNTIES</div>
+      <div class="fi active">
+        <div class="fl"><div class="dot" style="background:var(--green)"></div>Pinellas</div>
+        <span class="badge live">LIVE</span>
+      </div>
+      <div class="fi" style="opacity:.4">
+        <div class="fl"><div class="dot" style="background:var(--muted)"></div>Hillsborough</div>
+        <span class="badge soon">SOON</span>
+      </div>
+      <div class="fi" style="opacity:.4">
+        <div class="fl"><div class="dot" style="background:var(--muted)"></div>Pasco</div>
+        <span class="badge soon">SOON</span>
       </div>
     </div>
   </aside>
 
-  <!-- MAIN CONTENT -->
+  <!-- CONTENT -->
   <main class="content">
-
-    <!-- TABS -->
     <div class="tabs">
-      <div class="tab active" onclick="switchTab('feed', this)">Live Feed <span class="tab-count" id="tc-feed">0</span></div>
-      <div class="tab" onclick="switchTab('sources', this)">Data Sources</div>
+      <div class="tab active" onclick="switchTab('feed',this)">
+        Live Feed <span id="tc-total" style="background:var(--border);font-size:9px;padding:1px 5px;border-radius:3px;margin-left:4px;">0</span>
+      </div>
+      <div class="tab" onclick="switchTab('sources',this)">Data Sources</div>
     </div>
 
-    <!-- LIVE FEED TAB -->
+    <!-- LIVE FEED -->
     <div id="tab-feed">
+      <div class="metrics" id="metrics-grid"></div>
 
-      <!-- METRIC CARDS -->
-      <div class="metrics-grid">
-        <div class="metric-card" style="--card-accent: var(--hot)">
-          <div class="metric-label">Lis Pendens</div>
-          <div class="metric-value" id="m-lis">0</div>
-          <div class="metric-sub">pre-foreclosure filings</div>
-        </div>
-        <div class="metric-card" style="--card-accent: var(--purple)">
-          <div class="metric-label">Probate</div>
-          <div class="metric-value" id="m-pro">0</div>
-          <div class="metric-sub">estate case filings</div>
-        </div>
-        <div class="metric-card" style="--card-accent: var(--warm)">
-          <div class="metric-label">Evictions</div>
-          <div class="metric-value" id="m-evict">0</div>
-          <div class="metric-sub">writ of possession</div>
-        </div>
-        <div class="metric-card" style="--card-accent: var(--orange)">
-          <div class="metric-label">Mechanic Liens</div>
-          <div class="metric-value" id="m-mech">0</div>
-          <div class="metric-sub">contractor disputes</div>
-        </div>
-        <div class="metric-card" style="--card-accent: var(--teal)">
-          <div class="metric-label">Judgments</div>
-          <div class="metric-value" id="m-jud">0</div>
-          <div class="metric-sub">court judgments filed</div>
-        </div>
-        <div class="metric-card" style="--card-accent: var(--green)">
-          <div class="metric-label">Tax Deeds + Surplus</div>
-          <div class="metric-value" id="m-tax">0</div>
-          <div class="metric-sub">delinquent / auction</div>
-        </div>
+      <div class="controls">
+        <input class="search-box" id="search" type="text"
+          placeholder="🔍  Search by name, defendant, case #, or type..."
+          oninput="onSearch()">
+        <select class="ctl" id="sort-sel" onchange="applyFilters()">
+          <option value="score">Score ↓</option>
+          <option value="name">Name A–Z</option>
+          <option value="date">Date ↓</option>
+          <option value="signal">Signal</option>
+        </select>
+        <span class="rec-count" id="rec-count">0 records</span>
       </div>
 
-      <!-- LEAD TABLE -->
-      <div class="table-header">
-        <span class="table-title">DISTRESS LEADS — PINELLAS COUNTY</span>
-        <span class="last-updated">UPDATED: <span id="updated-time">—</span></span>
-      </div>
+      <div class="updated-tag">UPDATED: <span id="updated-time">—</span></div>
 
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Signal</th>
-              <th>Name / Party</th>
-              <th>Case #</th>
-              <th>Date Filed</th>
-              <th>Score</th>
+              <th onclick="sortBy('signal')">Signal</th>
+              <th onclick="sortBy('name')">Defendant / Owner</th>
+              <th onclick="sortBy('case')">Case #</th>
+              <th>Case Type</th>
+              <th onclick="sortBy('date')">Date</th>
+              <th onclick="sortBy('score')">Score</th>
               <th>Heat</th>
               <th>County</th>
             </tr>
           </thead>
-          <tbody id="leads-table">
-            <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px;font-family:var(--mono);font-size:11px;">AWAITING FIRST SCRAPE RUN...</td></tr>
-          </tbody>
+          <tbody id="leads-tbody"></tbody>
         </table>
       </div>
+      <div class="pagination" id="pagination"></div>
     </div>
 
-    <!-- DATA SOURCES TAB -->
+    <!-- DATA SOURCES -->
     <div id="tab-sources" style="display:none">
-      <div class="signals-grid">
-
-        <div class="signal-card">
-          <div class="signal-header">
-            <span class="signal-icon">🏛️</span>
-            <div class="signal-status"><div class="status-dot"></div>LIVE — daily scrape</div>
-          </div>
-          <div class="signal-name">Pinellas Clerk Official Records</div>
-          <div class="signal-desc">Lis Pendens, Mechanic Liens, Judgments, Probate — scraped daily from publicfiles.mypinellasclerk.gov</div>
-          <div class="signal-count">6 <span>doc types</span></div>
-          <a href="https://publicfiles.mypinellasclerk.gov" target="_blank" style="display:inline-block;margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none;letter-spacing:0.05em;border:1px solid var(--border2);padding:6px 12px;border-radius:5px;">Open Official Records ↗</a>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px">
+          <div style="font-size:20px;margin-bottom:8px">🏛️</div>
+          <div style="font-weight:600;margin-bottom:6px">Pinellas Clerk Official Records</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">Lis Pendens, Mechanic Liens, Judgments, Tax Deeds — scraped daily at 2pm</div>
+          <div style="font-size:10px;color:var(--green);font-family:var(--mono);margin-bottom:10px">● LIVE — weekdays 2pm EST</div>
+          <a href="https://publicfiles.mypinellasclerk.gov" target="_blank" style="font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none;border:1px solid var(--border2);padding:5px 10px;border-radius:5px;display:inline-block">Open Records ↗</a>
         </div>
-
-        <div class="signal-card">
-          <div class="signal-header">
-            <span class="signal-icon">⚖️</span>
-            <div class="signal-status"><div class="status-dot"></div>LIVE — daily scrape</div>
-          </div>
-          <div class="signal-name">Tax Deed Sales</div>
-          <div class="signal-desc">Properties delinquent in taxes scheduled for auction. Includes surplus balance — former owners owed money.</div>
-          <div class="signal-count">+Surplus <span>funds</span></div>
-          <a href="https://pinellas.realtdm.com/public/cases/list" target="_blank" style="display:inline-block;margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none;letter-spacing:0.05em;border:1px solid var(--border2);padding:6px 12px;border-radius:5px;">Tax Deed Site ↗</a>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px">
+          <div style="font-size:20px;margin-bottom:8px">⚖️</div>
+          <div style="font-weight:600;margin-bottom:6px">Probate / Estate Filings</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">New estate case filings. Heirs often must sell quickly — especially out-of-state owners.</div>
+          <div style="font-size:10px;color:var(--green);font-family:var(--mono);margin-bottom:10px">● LIVE — weekdays 2pm EST</div>
+          <a href="https://publicfiles.mypinellasclerk.gov/download/PROBATE/" target="_blank" style="font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none;border:1px solid var(--border2);padding:5px 10px;border-radius:5px;display:inline-block">Probate Records ↗</a>
         </div>
-
-        <div class="signal-card">
-          <div class="signal-header">
-            <span class="signal-icon">🏠</span>
-            <div class="signal-status"><div class="status-dot"></div>LIVE — daily scrape</div>
-          </div>
-          <div class="signal-name">Probate / Estate Filings</div>
-          <div class="signal-desc">New estate case filings. Heirs often motivated to sell quickly, especially when property is out of state.</div>
-          <div class="signal-count" id="src-probate">0 <span>today</span></div>
-          <a href="https://publicfiles.mypinellasclerk.gov/download/PROBATE/" target="_blank" style="display:inline-block;margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none;letter-spacing:0.05em;border:1px solid var(--border2);padding:6px 12px;border-radius:5px;">Probate Records ↗</a>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px">
+          <div style="font-size:20px;margin-bottom:8px">💰</div>
+          <div style="font-weight:600;margin-bottom:6px">Tax Deeds + Surplus Funds</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">Properties at auction for delinquent taxes. Surplus funds owed to former owners.</div>
+          <div style="font-size:10px;color:var(--green);font-family:var(--mono);margin-bottom:10px">● LIVE — weekdays 2pm EST</div>
+          <a href="https://pinellas.realtdm.com/public/cases/list" target="_blank" style="font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none;border:1px solid var(--border2);padding:5px 10px;border-radius:5px;display:inline-block">Tax Deed Site ↗</a>
         </div>
-
-        <div class="signal-card">
-          <div class="signal-header">
-            <span class="signal-icon">🚪</span>
-            <div class="signal-status"><div class="status-dot"></div>LIVE — daily scrape</div>
-          </div>
-          <div class="signal-name">Evictions (Writ of Possession)</div>
-          <div class="signal-desc">Landlords under financial stress. Often indicates a rental property owner ready to exit.</div>
-          <div class="signal-count" id="src-evict">0 <span>today</span></div>
-          <a href="https://publicfiles.mypinellasclerk.gov/download/CIVIL/" target="_blank" style="display:inline-block;margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none;letter-spacing:0.05em;border:1px solid var(--border2);padding:6px 12px;border-radius:5px;">Civil Records ↗</a>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px">
+          <div style="font-size:20px;margin-bottom:8px">🏠</div>
+          <div style="font-weight:600;margin-bottom:6px">Property Appraiser (PCPAO)</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">Owner info, mailing addresses, assessed values, equity estimates.</div>
+          <div style="font-size:10px;color:var(--warm);font-family:var(--mono);margin-bottom:10px">◐ Coming soon — auto-enrich</div>
+          <a href="https://www.pcpao.org" target="_blank" style="font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none;border:1px solid var(--border2);padding:5px 10px;border-radius:5px;display:inline-block">Property Search ↗</a>
         </div>
-
-        <div class="signal-card">
-          <div class="signal-header">
-            <span class="signal-icon">🏢</span>
-            <div class="signal-status" style="color:var(--warm)"><div class="status-dot" style="background:var(--warm)"></div>LINK — manual</div>
-          </div>
-          <div class="signal-name">Property Appraiser (PCPAO)</div>
-          <div class="signal-desc">Owner info, mailing addresses, assessed values, land use. Cross-reference to enrich lead records.</div>
-          <div class="signal-count">Lookup <span>tool</span></div>
-          <a href="https://www.pcpao.org" target="_blank" style="display:inline-block;margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none;letter-spacing:0.05em;border:1px solid var(--border2);padding:6px 12px;border-radius:5px;">Property Search ↗</a>
-        </div>
-
-        <div class="signal-card">
-          <div class="signal-header">
-            <span class="signal-icon">💰</span>
-            <div class="signal-status" style="color:var(--warm)"><div class="status-dot" style="background:var(--warm)"></div>LINK — manual</div>
-          </div>
-          <div class="signal-name">Tax Collector</div>
-          <div class="signal-desc">Delinquent tax rolls. Property owners 2+ years behind on taxes — highest urgency to sell.</div>
-          <div class="signal-count">Search <span>tool</span></div>
-          <a href="https://www.pinellascounty.org/taxcollector" target="_blank" style="display:inline-block;margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none;letter-spacing:0.05em;border:1px solid var(--border2);padding:6px 12px;border-radius:5px;">Tax Portal ↗</a>
-        </div>
-
       </div>
     </div>
-
   </main>
 </div>
 
 <script>
-// ── State ──────────────────────────────────────────────────
-let allLeads = [];
-let activeSignal = 'all';
-let activeHeat = 'all';
-
-// Signal colors
-const COLORS = {
-  lis_pendens:    '#ef4444',
-  probate:        '#a78bfa',
-  evictions:      '#f59e0b',
-  mechanic_liens: '#f97316',
-  judgments:      '#14b8a6',
-  tax_deeds:      '#22c55e',
+const DATA_URL = 'https://rehabtampabay.github.io/pinellas-intel/data/leads.json';
+const PER_PAGE = 50;
+const COLORS   = {
+  lis_pendens:'#ef4444',probate:'#a78bfa',evictions:'#f59e0b',
+  mechanic_liens:'#f97316',judgments:'#14b8a6',tax_deeds:'#22c55e'
 };
 
-const LABELS = {
-  lis_pendens:    'LIS PENDENS',
-  probate:        'PROBATE',
-  evictions:      'EVICTION',
-  mechanic_liens: 'MECH LIEN',
-  judgments:      'JUDGMENT',
-  tax_deeds:      'TAX DEED',
-};
+let allLeads=[], filtered=[], page=1, sortAsc=false;
+const filters = {signal:'all', heat:'all', casetype:'all'};
+let searchQ = '';
 
-// ── Load data from leads.json ──────────────────────────────
+// ── Extract defendant name from "BANK Vs. JOHN SMITH.et al" ──
+function extractDefendant(name) {
+  if (!name) return {plaintiff:'—', defendant:'—'};
+  const vsIdx = name.toUpperCase().indexOf(' VS. ');
+  if (vsIdx === -1) return {plaintiff: name, defendant: ''};
+  const plaintiff  = name.substring(0, vsIdx).trim();
+  let   defendant  = name.substring(vsIdx + 5).trim();
+  defendant = defendant.replace(/\.et al\.?$/i,'').replace(/\. et al\.?$/i,'').trim();
+  return {plaintiff, defendant};
+}
+
+// ── Load ──
 async function loadData() {
   try {
-    const r = await fetch(`data/leads.json?t=${Date.now()}`);
+    const r    = await fetch(DATA_URL + '?t=' + Date.now());
     const data = await r.json();
-    renderDashboard(data);
+    render(data);
   } catch(e) {
-    console.warn('Could not load leads.json — using demo data');
-    renderDashboard(getDemoData());
+    console.error('Failed to load leads.json:', e);
+    showError();
   }
   document.getElementById('loading').style.opacity = '0';
-  setTimeout(() => document.getElementById('loading').style.display = 'none', 400);
+  setTimeout(()=> document.getElementById('loading').style.display='none', 400);
 }
 
-// ── Render ──────────────────────────────────────────────────
-function renderDashboard(data) {
-  const b = data.breakdown || {};
-
-  // Update metric cards
-  document.getElementById('m-lis').textContent   = b.lis_pendens    || 0;
-  document.getElementById('m-pro').textContent   = b.probate        || 0;
-  document.getElementById('m-evict').textContent = b.evictions      || 0;
-  document.getElementById('m-mech').textContent  = b.mechanic_liens || 0;
-  document.getElementById('m-jud').textContent   = b.judgments      || 0;
-  document.getElementById('m-tax').textContent   = b.tax_deeds      || 0;
-
-  // Sidebar badges
-  const total = Object.values(b).reduce((a,v)=>a+(v||0),0);
-  document.getElementById('badge-all').textContent          = total;
-  document.getElementById('badge-lis_pendens').textContent  = b.lis_pendens    || 0;
-  document.getElementById('badge-probate').textContent      = b.probate        || 0;
-  document.getElementById('badge-evictions').textContent    = b.evictions      || 0;
-  document.getElementById('badge-mechanic_liens').textContent= b.mechanic_liens|| 0;
-  document.getElementById('badge-judgments').textContent    = b.judgments      || 0;
-  document.getElementById('badge-tax_deeds').textContent    = b.tax_deeds      || 0;
-
-  document.getElementById('total-records').textContent = total;
-  document.getElementById('updated-time').textContent  = data.updated || '—';
-  document.getElementById('tc-feed').textContent       = total;
-
-  // Build lead rows from breakdown data for demo display
-  buildLeadRows(b);
+function showError() {
+  document.getElementById('leads-tbody').innerHTML =
+    '<tr><td colspan="8" class="empty">Could not load data — try refreshing</td></tr>';
 }
 
-function buildLeadRows(b) {
-  allLeads = [];
-  const signals = ['lis_pendens','probate','evictions','mechanic_liens','judgments','tax_deeds'];
-
-  signals.forEach(sig => {
-    const count = b[sig] || 0;
-    for(let i = 0; i < Math.min(count, 5); i++) {
-      const score = getBaseScore(sig) + Math.floor(Math.random()*15);
-      allLeads.push({
-        signal: sig,
-        name: '— see Google Sheet —',
-        case: 'View in Sheets',
-        date: new Date().toLocaleDateString(),
-        score: score,
-        heat: score >= 60 ? 'hot' : score >= 40 ? 'warm' : 'cold',
-        county: 'Pinellas'
-      });
-    }
+function render(data) {
+  allLeads = (data.leads || []).map(l => {
+    const {plaintiff, defendant} = extractDefendant(l.name);
+    return {...l, plaintiff, defendant};
   });
 
-  const hotCount = allLeads.filter(l=>l.heat==='hot').length;
-  const avgScore = allLeads.length ? Math.round(allLeads.reduce((a,l)=>a+l.score,0)/allLeads.length) : 0;
+  const b   = data.by_county?.Pinellas?.breakdown || {};
+  const hot = allLeads.filter(l=>l.heat==='hot').length;
 
-  document.getElementById('hot-count').textContent  = hotCount;
-  document.getElementById('avg-score').textContent  = avgScore;
-  document.getElementById('badge-hot').textContent  = hotCount;
+  // Topbar
+  document.getElementById('stat-total').textContent = allLeads.length.toLocaleString();
+  document.getElementById('stat-hot').textContent   = hot;
+  document.getElementById('stat-new').textContent   = data.total_new || 0;
+  document.getElementById('updated-time').textContent = data.updated || '—';
+  document.getElementById('tc-total').textContent   = allLeads.length.toLocaleString();
 
-  renderTable();
+  // Sidebar badges
+  document.getElementById('b-all').textContent          = allLeads.length;
+  document.getElementById('b-hot').textContent          = hot;
+  document.getElementById('b-lis_pendens').textContent  = allLeads.filter(l=>l.signal==='lis_pendens').length;
+  document.getElementById('b-probate').textContent      = allLeads.filter(l=>l.signal==='probate').length;
+  document.getElementById('b-evictions').textContent    = allLeads.filter(l=>l.signal==='evictions').length;
+  document.getElementById('b-mechanic_liens').textContent=allLeads.filter(l=>l.signal==='mechanic_liens').length;
+  document.getElementById('b-judgments').textContent    = allLeads.filter(l=>l.signal==='judgments').length;
+  document.getElementById('b-tax_deeds').textContent    = allLeads.filter(l=>l.signal==='tax_deeds').length;
+
+  // Metric cards
+  const cards = [
+    {key:'lis_pendens',   label:'Lis Pendens',    sub:'pre-foreclosure',   ca:'#ef4444'},
+    {key:'probate',       label:'Probate',         sub:'estate filings',    ca:'#a78bfa'},
+    {key:'evictions',     label:'Evictions',       sub:'writ of possession',ca:'#f59e0b'},
+    {key:'mechanic_liens',label:'Mechanic Liens',  sub:'contractor liens',  ca:'#f97316'},
+    {key:'judgments',     label:'Judgments',       sub:'court judgments',   ca:'#14b8a6'},
+    {key:'tax_deeds',     label:'Tax Deeds',       sub:'delinquent/auction',ca:'#22c55e'},
+  ];
+  document.getElementById('metrics-grid').innerHTML = cards.map(c => {
+    const count = allLeads.filter(l=>l.signal===c.key).length;
+    return `<div class="mc" style="--ca:${c.ca}">
+      <div class="mc-label">${c.label}</div>
+      <div class="mc-val">${count.toLocaleString()}</div>
+      <div class="mc-sub">${c.sub}</div>
+    </div>`;
+  }).join('');
+
+  applyFilters();
 }
 
-function getBaseScore(sig) {
-  const scores = {lis_pendens:40,probate:35,tax_deeds:35,mechanic_liens:20,judgments:20,evictions:15};
-  return scores[sig] || 10;
+// ── Filters ──
+function setFilter(type, val, el) {
+  filters[type] = val;
+  el.closest('.sb-section').querySelectorAll('.fi').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  page = 1;
+  applyFilters();
 }
 
-// ── Table Render ────────────────────────────────────────────
-function renderTable() {
-  const filtered = allLeads.filter(l => {
-    if(activeSignal !== 'all' && l.signal !== activeSignal) return false;
-    if(activeHeat === 'hot' && l.heat !== 'hot') return false;
+function onSearch() {
+  searchQ = document.getElementById('search').value.toLowerCase();
+  page = 1;
+  applyFilters();
+}
+
+function applyFilters() {
+  filtered = allLeads.filter(l => {
+    if (filters.signal !== 'all' && l.signal !== filters.signal) return false;
+    if (filters.heat === 'hot'  && l.heat !== 'hot')  return false;
+    if (filters.heat === 'warm' && l.heat !== 'warm') return false;
+    if (filters.casetype !== 'all') {
+      const ct = (l.case_type || '').toLowerCase();
+      if (filters.casetype === 'homestead'    && !ct.includes('homestead'))     return false;
+      if (filters.casetype === 'non-homestead'&& !ct.includes('non-homestead')) return false;
+      if (filters.casetype === 'condo'        && !ct.includes('condo'))         return false;
+    }
+    if (searchQ) {
+      const hay = [l.name,l.defendant,l.plaintiff,l.case,l.case_type].join(' ').toLowerCase();
+      if (!hay.includes(searchQ)) return false;
+    }
     return true;
   });
 
-  const tbody = document.getElementById('leads-table');
+  // Sort
+  const field = document.getElementById('sort-sel').value;
+  filtered.sort((a,b) => {
+    let av = field==='score' ? (a.score||0) : (a[field]||'');
+    let bv = field==='score' ? (b.score||0) : (b[field]||'');
+    if (av < bv) return sortAsc ? -1 : 1;
+    if (av > bv) return sortAsc ? 1 : -1;
+    return 0;
+  });
 
-  if(!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px;font-family:var(--mono);font-size:11px;">NO LEADS MATCH FILTER</td></tr>`;
+  renderTable();
+}
+
+function sortBy(field) {
+  sortAsc = document.getElementById('sort-sel').value === field ? !sortAsc : (field==='name');
+  document.getElementById('sort-sel').value = field;
+  applyFilters();
+}
+
+// ── Table ──
+function renderTable() {
+  const total = filtered.length;
+  const pages = Math.ceil(total/PER_PAGE)||1;
+  if (page>pages) page=pages;
+  const slice = filtered.slice((page-1)*PER_PAGE, page*PER_PAGE);
+
+  document.getElementById('rec-count').textContent = total.toLocaleString() + ' records';
+
+  const tbody = document.getElementById('leads-tbody');
+  if (!slice.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">NO LEADS MATCH FILTER</td></tr>';
+    renderPagination(0,1);
     return;
   }
 
-  tbody.innerHTML = filtered.map(l => {
-    const color = COLORS[l.signal] || '#64748b';
-    const label = LABELS[l.signal] || l.signal.toUpperCase();
-    const heatCls = `heat-${l.heat}`;
-    const heatTxt = l.heat === 'hot' ? '🔥 HOT' : l.heat === 'warm' ? '⚡ WARM' : '❄️ COLD';
-    const fillW = Math.round(l.score);
+  tbody.innerHTML = slice.map((l,idx) => {
+    const color  = COLORS[l.signal]||'#64748b';
+    const hcls   = 'heat-'+(l.heat||'cold');
+    const htxt   = l.heat==='hot'?'🔥 HOT':l.heat==='warm'?'⚡ WARM':'❄️ COLD';
+    const fill   = Math.min(l.score||0, 100);
+    const gIdx   = (page-1)*PER_PAGE+idx;
 
-    return `<tr>
-      <td><span style="font-family:var(--mono);font-size:10px;color:${color};letter-spacing:0.06em">${label}</span></td>
-      <td>${l.name}</td>
-      <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${l.case}</td>
-      <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${l.date}</td>
+    // Show defendant as primary, plaintiff as secondary
+    const primary   = l.defendant || l.name || '—';
+    const secondary = l.defendant ? l.plaintiff : '';
+
+    return `<tr class="row-link" onclick="openDetail(${gIdx})">
+      <td><span class="sig-tag" style="background:${color}22;color:${color}">${l.label||'—'}</span></td>
       <td>
-        <div class="score-bar-wrap">
-          <div class="score-bar"><div class="score-fill" style="width:${fillW}%"></div></div>
-          <span class="score-num">${l.score}</span>
-        </div>
+        <div class="name-main">${primary.substring(0,45)}${primary.length>45?'...':''}</div>
+        ${secondary?`<div class="name-vs">${secondary.substring(0,40)}${secondary.length>40?'...':''}</div>`:''}
       </td>
-      <td><span class="heat-badge ${heatCls}">${heatTxt}</span></td>
-      <td><span class="county-tag">PINELLAS</span></td>
+      <td><span class="case-cell">${l.case||'—'}</span></td>
+      <td><span class="type-cell" title="${l.case_type||''}">${(l.case_type||'—').substring(0,35)}${(l.case_type||'').length>35?'...':''}</span></td>
+      <td><span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${l.date||'—'}</span></td>
+      <td><div class="score-wrap">
+        <div class="score-bar"><div class="score-fill" style="width:${fill}%"></div></div>
+        <span class="score-num">${l.score||0}</span>
+      </div></td>
+      <td><span class="heat-badge ${hcls}">${htxt}</span></td>
+      <td><span class="county-tag">${(l.county||'PINELLAS').toUpperCase()}</span></td>
     </tr>`;
   }).join('');
+
+  renderPagination(total, pages);
 }
 
-// ── Filters ─────────────────────────────────────────────────
-function filterSignal(sig) {
-  activeSignal = sig;
-  document.querySelectorAll('.sidebar .filter-item').forEach(el=>el.classList.remove('active'));
-  event.currentTarget.classList.add('active');
-  renderTable();
+function renderPagination(total, pages) {
+  const el = document.getElementById('pagination');
+  if (pages<=1){el.innerHTML='';return;}
+  let html = `<button class="pg-btn" onclick="goPage(${page-1})" ${page===1?'disabled':''}>← PREV</button>`;
+  const s=Math.max(1,page-2), e=Math.min(pages,page+2);
+  for(let i=s;i<=e;i++) html+=`<button class="pg-btn ${i===page?'active':''}" onclick="goPage(${i})">${i}</button>`;
+  html += `<button class="pg-btn" onclick="goPage(${page+1})" ${page===pages?'disabled':''}>NEXT →</button>`;
+  html += `<span class="pg-info">${page} of ${pages} &nbsp;·&nbsp; ${total.toLocaleString()} records</span>`;
+  el.innerHTML = html;
 }
 
-function filterHeat(heat) {
-  activeHeat = heat;
-  renderTable();
+function goPage(p){page=p;renderTable();window.scrollTo(0,200);}
+
+// ── Detail Panel ──
+function openDetail(idx) {
+  const l   = filtered[idx];
+  if (!l) return;
+  const color= COLORS[l.signal]||'#64748b';
+  const hcls = 'heat-'+(l.heat||'cold');
+  const htxt = l.heat==='hot'?'🔥 HOT':l.heat==='warm'?'⚡ WARM':'❄️ COLD';
+
+  // Build PCPAO lookup URL from name
+  const searchName = encodeURIComponent(l.defendant || l.name || '');
+  const pcpaoUrl   = `https://www.pcpao.org/search/results?name=${searchName}`;
+  const clerkUrl   = l.case ? `https://www.pinellasclerk.org/casesearch?q=${encodeURIComponent(l.case)}` : '#';
+
+  document.getElementById('dp-content').innerHTML = `
+    <div class="dp-signal" style="color:${color}">● ${l.label||'LEAD'}</div>
+    <div class="dp-name">${l.defendant||l.name||'—'}</div>
+    ${l.defendant?`<div class="dp-defendant">Filed by: ${l.plaintiff}</div>`:''}
+
+    <div style="display:flex;align-items:center;gap:12px;margin:16px 0;">
+      <div>
+        <div class="dp-score-big">${l.score||0}</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.1em">LEAD SCORE</div>
+      </div>
+      <div>
+        <div class="heat-badge ${hcls}" style="font-size:13px;padding:6px 14px">${htxt}</div>
+      </div>
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">Case Details</div>
+      <div class="dp-row"><span class="dp-key">Case #</span><span class="dp-val">${l.case||'—'}</span></div>
+      <div class="dp-row"><span class="dp-key">Signal</span><span class="dp-val">${l.label||'—'}</span></div>
+      <div class="dp-row"><span class="dp-key">Case Type</span><span class="dp-val">${l.case_type||'—'}</span></div>
+      <div class="dp-row"><span class="dp-key">Date Filed</span><span class="dp-val">${l.date||'—'}</span></div>
+      ${l.amount?`<div class="dp-row"><span class="dp-key">Amount</span><span class="dp-val" style="color:var(--hot)">${l.amount}</span></div>`:''}
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">Property</div>
+      <div class="dp-row"><span class="dp-key">Address</span><span class="dp-val">${l.address&&l.address!=='—'?l.address:'Lookup required'}</span></div>
+      <div class="dp-row"><span class="dp-key">County</span><span class="dp-val">${l.county||'Pinellas'}</span></div>
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">Quick Actions</div>
+      <a href="${clerkUrl}" target="_blank" style="display:block;width:100%;margin-bottom:8px;padding:9px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:none;text-align:center;letter-spacing:.05em;">
+        🏛️ VIEW COURT RECORD ↗
+      </a>
+      <a href="${pcpaoUrl}" target="_blank" style="display:block;width:100%;margin-bottom:8px;padding:9px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:none;text-align:center;letter-spacing:.05em;">
+        🏠 LOOKUP PROPERTY (PCPAO) ↗
+      </a>
+      <button class="skip-btn" onclick="copyToClipboard('${(l.defendant||l.name||'').replace(/'/g,'').substring(0,50)}')">
+        📋 COPY NAME FOR SKIP TRACE
+      </button>
+    </div>
+  `;
+  document.getElementById('detail-overlay').style.display='block';
 }
 
-// ── Tabs ────────────────────────────────────────────────────
-function switchTab(id, el) {
-  document.getElementById('tab-feed').style.display    = id==='feed'    ? '' : 'none';
-  document.getElementById('tab-sources').style.display = id==='sources' ? '' : 'none';
+function closeDetail(e) {
+  if (!e || e.target===document.getElementById('detail-overlay'))
+    document.getElementById('detail-overlay').style.display='none';
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(()=>{
+    alert('Copied: ' + text);
+  });
+}
+
+function switchTab(id,el) {
+  document.getElementById('tab-feed').style.display    = id==='feed'    ? '':'none';
+  document.getElementById('tab-sources').style.display = id==='sources' ? '':'none';
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
 }
 
-// ── Demo data (until first real scrape) ─────────────────────
-function getDemoData() {
-  return {
-    updated: "Awaiting first run — set up GitHub Actions",
-    county: "Pinellas",
-    total_new: 0,
-    breakdown: { lis_pendens:0, probate:0, evictions:0, mechanic_liens:0, judgments:0, tax_deeds:0 }
-  };
-}
-
-// ── Boot ─────────────────────────────────────────────────────
-window.onload = () => setTimeout(loadData, 300);
+window.onload = ()=> setTimeout(loadData, 200);
 </script>
 </body>
 </html>
