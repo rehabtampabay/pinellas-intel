@@ -47,7 +47,7 @@ def fetch_odyssey_csv(directory_url, days_back=7):
 
     today   = datetime.today()
     targets = []
-    for i in range(1, days_back + 1):   # start at 1 = yesterday
+    for i in range(days_back):   # start at 1 = yesterday
         d = today - timedelta(days=i)
         targets.append(d.strftime("%B %d, %Y"))
         targets.append(d.strftime("%B %-d, %Y"))
@@ -101,7 +101,7 @@ def fetch_or_file(prefix, days_back=5):
     Starts from yesterday since files are generated overnight.
     """
     today = datetime.today()
-    for i in range(1, days_back + 1):   # start at 1 = yesterday
+    for i in range(days_back):   # start at 1 = yesterday
         date  = today - timedelta(days=i)
         fname = prefix + date.strftime("%Y%m%d") + "01id.52"
         url   = BASE + "/OFFICIAL_RECORDS/INDEXES_DAILY/" + fname
