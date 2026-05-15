@@ -1,12 +1,12 @@
 {
-  "updated": "2026-05-15 14:37 UTC",
-  "total_new": 11,
+  "updated": "2026-05-15 22:13 UTC",
+  "total_new": 0,
   "total_records": 2959,
   "hot_count": 78,
   "by_county": {
     "Pinellas": {
       "total": 2959,
-      "new_today": 11,
+      "new_today": 0,
       "breakdown": {
         "lis_pendens": 267,
         "probate": 1372,
