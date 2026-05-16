@@ -15,11 +15,14 @@ HEADERS  = {"User-Agent": "Mozilla/5.0 (compatible; PropertyIntel/1.0)"}
 BASE     = config.COUNTIES["pinellas"]["public_base"]
 SHEET_ID = config.COUNTIES["pinellas"]["sheet_id"]
 
-# L-file: col 9 is doc type
-LIEN_CODES     = {"LN","LNMECH","LNHOA","LNIRS","LNCTY","LNCON","LNSTA","LNFED","LNTAX"}
-JUDGMENT_CODES = {"JUD","CCJ","DRJUD","FJUD","JUDO","JUDL","SATJUD"}
-# D-file: col 3 is doc type
-DEED_CODES     = {"TDEED","TAXDEED","CTD","SRTD"}
+# ── CONFIRMED doc type codes from actual Pinellas OR index files ──
+# L-file col 9 codes:
+LIEN_CODES     = {"LN", "JUD LN", "LN "}
+JUDGMENT_CODES = {"JUD", "CC JUD", "DRJUDGMENT", "JUD LN"}
+LP_CODES       = {"LP"}  # Lis Pendens recorded in Official Records
+# D-file col 3 codes:
+DEED_CODES     = {"TDEED", "TAXDEED", "CTD", "SRTD"}
+PROBATE_D_CODES= {"PROBATE", "PROBATERP"}
 
 
 def fetch_odyssey_csv(directory_url, days_back=7):
@@ -127,6 +130,8 @@ def fetch_or_raw(prefix, days_back=5):
     return [], None
 
 
+# ── SIGNAL 1: LIS PENDENS (Civil court filings) ──────────────────
+
 def scrape_lis_pendens():
     print("\nLIS PENDENS...")
     rows = fetch_odyssey_csv(BASE + "/CIVIL/LIS_PENDENS_DAILY/")
@@ -136,6 +141,10 @@ def scrape_lis_pendens():
     return 0
 
 
+# ── SIGNAL 2: PROBATE ────────────────────────────────────────────
+# Probate files use date-format naming AND may have repeating
+# case numbers for amended filings. Use case#+style as compound key.
+
 def scrape_probate():
     print("\nPROBATE...")
     rows = fetch_date_format_csv(
@@ -143,11 +152,16 @@ def scrape_probate():
         "EstateNewCaseFilingsDaily_{date}.csv",
         days_back=7, min_size=500)
     if rows:
+        # Use columns 1 (case#) + 4 (style/name) as compound dedup key
+        # so new filings on existing cases still come through
         return sheets_helper.append_new_rows(
-            SHEET_ID, config.TABS["probate"], rows, dedup_col=1)
+            SHEET_ID, config.TABS["probate"], rows,
+            dedup_col=1, dedup_col2=4)
     print("  No probate data")
     return 0
 
+
+# ── SIGNAL 3: EVICTIONS ──────────────────────────────────────────
 
 def scrape_evictions():
     print("\nEVICTIONS...")
@@ -158,19 +172,20 @@ def scrape_evictions():
     return 0
 
 
+# ── SIGNALS 4+5+6+7: OFFICIAL RECORDS INDEX ──────────────────────
+# L-file col 0=instrument, col 9=doc type
+# D-file col 2=instrument, col 3=doc type, col 11=date
+
 def scrape_official_records_index():
     print("\nOFFICIAL RECORDS INDEX...")
-    lien_count = judgment_count = tax_deed_count = 0
+    lien_count = judgment_count = tax_deed_count = lp_count = 0
 
-    # L-FILE: col 0=instrument, col 9=doc type, col 7=book, col 8=page
+    # ── L-FILE ──
     lines, filed_date = fetch_or_raw("l")
     if lines:
-        print("  L-file sample (first 3 lines):")
-        for ln in lines[:3]:
-            print("    " + ln[:120])
-
         lien_rows = [["Instrument", "Doc Type", "Book", "Page", "Date Filed"]]
         jud_rows  = [["Instrument", "Doc Type", "Book", "Page", "Date Filed"]]
+        lp_rows   = [["Instrument", "Doc Type", "Book", "Page", "Date Filed"]]
         seen      = set()
         all_types = set()
 
@@ -179,7 +194,8 @@ def scrape_official_records_index():
             if len(parts) < 10:
                 continue
             instrument = parts[0].strip()
-            doc_type   = parts[9].strip().upper()
+            doc_type   = parts[9].strip()
+            doc_upper  = doc_type.upper()
             book       = parts[7].strip() if len(parts) > 7 else ""
             page       = parts[8].strip() if len(parts) > 8 else ""
             all_types.add(doc_type)
@@ -188,32 +204,41 @@ def scrape_official_records_index():
                 continue
             seen.add(instrument)
 
-            if doc_type in LIEN_CODES or doc_type.startswith("LN"):
-                lien_rows.append([instrument, doc_type, book, page, filed_date])
-            elif doc_type in JUDGMENT_CODES or "JUD" in doc_type:
-                jud_rows.append([instrument, doc_type, book, page, filed_date])
+            row = [instrument, doc_type, book, page, filed_date]
 
-        print("  Doc types in l-file: " + str(sorted(all_types)))
-        print("  Liens: " + str(len(lien_rows)-1))
-        print("  Judgments: " + str(len(jud_rows)-1))
+            if doc_upper in LP_CODES:
+                lp_rows.append(row)
+            elif doc_upper in LIEN_CODES or (doc_upper.startswith("LN") and "JUD" not in doc_upper):
+                lien_rows.append(row)
+            elif doc_upper in JUDGMENT_CODES or "JUD" in doc_upper or "DRJUD" in doc_upper:
+                jud_rows.append(row)
+
+        print("  Doc types: " + str(sorted(all_types)))
+        print("  LP (OR): " + str(len(lp_rows)-1) +
+              " | Liens: " + str(len(lien_rows)-1) +
+              " | Judgments: " + str(len(jud_rows)-1))
+
+        # LP from OR goes into lis pendens tab (different source, same signal)
+        if len(lp_rows) > 1:
+            lp_count = sheets_helper.append_new_rows(
+                SHEET_ID, config.TABS["lis_pendens"], lp_rows, dedup_col=1)
+            print("  + " + str(lp_count) + " OR lis pendens → Lis Pendens Raw")
 
         if len(lien_rows) > 1:
             lien_count = sheets_helper.append_new_rows(
                 SHEET_ID, config.TABS["mechanic_liens"], lien_rows, dedup_col=1)
+
         if len(jud_rows) > 1:
             judgment_count = sheets_helper.append_new_rows(
                 SHEET_ID, config.TABS["judgments"], jud_rows, dedup_col=1)
 
-    # D-FILE: col 2=instrument, col 3=doc type, col 4=desc, col 5=legal, col 11=date
+    # ── D-FILE ──
     print("  Fetching d-file...")
     d_lines, d_date = fetch_or_raw("d")
     if d_lines:
-        print("  D-file sample (first 3 lines):")
-        for ln in d_lines[:3]:
-            print("    " + ln[:120])
-
-        deed_rows = [["Instrument", "Doc Type", "Description", "Legal Desc", "Date Filed"]]
-        seen      = set()
+        deed_rows   = [["Instrument", "Doc Type", "Description", "Legal Desc", "Date Filed"]]
+        probate_rows= [["Instrument", "Doc Type", "Description", "Legal Desc", "Date Filed"]]
+        seen        = set()
         all_d_types = set()
 
         for line in d_lines:
@@ -221,7 +246,8 @@ def scrape_official_records_index():
             if len(parts) < 4:
                 continue
             instrument  = parts[2].strip()
-            doc_type    = parts[3].strip().upper()
+            doc_type    = parts[3].strip()
+            doc_upper   = doc_type.upper()
             description = parts[4].strip() if len(parts) > 4 else ""
             legal_desc  = parts[5].strip() if len(parts) > 5 else ""
             date_filed  = parts[11].strip() if len(parts) > 11 else (d_date or "")
@@ -231,18 +257,31 @@ def scrape_official_records_index():
                 continue
             seen.add(instrument)
 
-            if doc_type in DEED_CODES or "TDEED" in doc_type or "TAX" in doc_type:
-                deed_rows.append([instrument, doc_type, description, legal_desc, date_filed])
+            row = [instrument, doc_type, description, legal_desc, date_filed]
 
-        print("  Doc types in d-file: " + str(sorted(all_d_types)))
-        print("  Tax deeds: " + str(len(deed_rows)-1))
+            if doc_upper in DEED_CODES or "TDEED" in doc_upper:
+                deed_rows.append(row)
+            elif doc_upper in PROBATE_D_CODES:
+                probate_rows.append(row)
+
+        print("  D-file types: " + str(sorted(all_d_types)[:20]))
+        print("  Tax deeds: " + str(len(deed_rows)-1) +
+              " | Probate recordings: " + str(len(probate_rows)-1))
 
         if len(deed_rows) > 1:
             tax_deed_count = sheets_helper.append_new_rows(
                 SHEET_ID, config.TABS["tax_deeds"], deed_rows, dedup_col=1)
 
-    return lien_count, judgment_count, tax_deed_count
+        # Probate recordings from d-file supplement the probate tab
+        if len(probate_rows) > 1:
+            p_added = sheets_helper.append_new_rows(
+                SHEET_ID, config.TABS["probate"], probate_rows, dedup_col=1)
+            print("  + " + str(p_added) + " probate recordings from OR index")
 
+    return lien_count + lp_count, judgment_count, tax_deed_count
+
+
+# ── SIGNAL 8: NEW CASE FILINGS ───────────────────────────────────
 
 def scrape_new_case_filings():
     print("\nNEW CASE FILINGS...")
@@ -252,16 +291,11 @@ def scrape_new_case_filings():
         return 0, 0
 
     header = rows[0]
-    print("  Columns: " + str(header[:8]))
-
-    ct_col = None
-    for i, h in enumerate(header):
-        if "CASE TYPE" in str(h).upper():
-            ct_col = i
-            break
+    ct_col = next((i for i, h in enumerate(header)
+                   if "CASE TYPE" in str(h).upper()), None)
 
     if ct_col is None:
-        print("  No Case Type column — all cols: " + str(header))
+        print("  No Case Type column — headers: " + str(header))
         return 0, 0
 
     jud_rows = [header]
@@ -270,13 +304,13 @@ def scrape_new_case_filings():
         if len(row) <= ct_col:
             continue
         ct = row[ct_col].upper()
-        if any(x in ct for x in ["JUDGMENT","GARNISH","SMALL CLAIM"]):
+        if any(x in ct for x in ["JUDGMENT", "GARNISH", "SMALL CLAIM"]):
             jud_rows.append(row)
-        elif any(x in ct for x in ["TAX DEED","TAXDEED","TAX CERT"]):
+        elif any(x in ct for x in ["TAX DEED", "TAXDEED", "TAX CERT"]):
             tax_rows.append(row)
 
-    print("  Judgment cases: " + str(len(jud_rows)-1))
-    print("  Tax deed cases: " + str(len(tax_rows)-1))
+    print("  Judgment cases: " + str(len(jud_rows)-1) +
+          " | Tax deed cases: " + str(len(tax_rows)-1))
 
     jud_added = tax_added = 0
     if len(jud_rows) > 1:
@@ -288,59 +322,66 @@ def scrape_new_case_filings():
     return jud_added, tax_added
 
 
+# ── SIGNAL 9: SURPLUS FUNDS ──────────────────────────────────────
+# Registry files are PDFs — scrape the PDF index for case numbers
+# then cross-reference with lis pendens to find surplus situations
+
 def scrape_surplus_funds():
     print("\nSURPLUS FUNDS...")
     reg_url = BASE + "/CIVIL/REGISTRY_TRUST_BALANCES_DAILY/"
     try:
         resp  = requests.get(reg_url, headers=HEADERS, timeout=15)
         soup  = BeautifulSoup(resp.text, "html.parser")
-        files = [a.get_text().strip() for a in soup.find_all("a") if a.get_text().strip()]
-        print("  Files in registry dir: " + str(files[:10]))
-        links = [a["href"] for a in soup.find_all("a", href=True)
-                 if a["href"].lower().endswith(".csv")]
-        if links:
-            url = reg_url.rstrip("/") + "/" + links[0].split("/")[-1]
-            r   = requests.get(url, headers=HEADERS, timeout=15)
-            if r.ok and len(r.content) > 300:
-                try:
-                    text = r.content.decode("utf-8")
-                except UnicodeDecodeError:
-                    text = r.content.decode("latin-1")
-                reader = csv.reader(io.StringIO(text))
-                rows   = list(reader)
-                if len(rows) > 1:
-                    print("  Columns: " + str(rows[0][:8]))
-                    return sheets_helper.append_new_rows(
-                        SHEET_ID, config.TABS["surplus_funds"], rows, dedup_col=3)
+
+        # Get all PDF links — these contain registry balance data
+        pdf_links = [a["href"] for a in soup.find_all("a", href=True)
+                     if a["href"].lower().endswith(".pdf")]
+        print("  Registry PDF files found: " + str(len(pdf_links)))
+
+        if pdf_links:
+            # We can't parse PDFs in GitHub Actions without extra deps
+            # Instead: record the PDF filenames as surplus signals
+            # Each PDF = a day's registry balances = potential surplus funds
+            today = datetime.today()
+            targets = [(today - timedelta(days=i)).strftime("%B %d, %Y")
+                       for i in range(7)]
+            targets += [(today - timedelta(days=i)).strftime("%B %-d, %Y")
+                        for i in range(7)]
+
+            recent = []
+            for link in pdf_links:
+                fname = link.split("/")[-1].replace("%20", " ")
+                for t in targets:
+                    if t in fname:
+                        recent.append(fname)
+                        break
+
+            if recent:
+                print("  Recent registry files: " + str(recent))
+                # Log as a note — manual review needed
+                rows = [["Source File", "Date", "Note", "County"],
+                        [recent[0], today.strftime("%m/%d/%Y"),
+                         "Registry Trust Balance — manual PDF review required",
+                         "Pinellas"]]
+                return sheets_helper.append_new_rows(
+                    SHEET_ID, config.TABS["surplus_funds"], rows,
+                    dedup_col=1)
+
     except Exception as e:
         print("  Registry error: " + str(e))
 
-    # Fallback: weekly garnishment file
-    print("  Trying garnishment weekly file...")
+    # Fallback: weekly garnishment CSV
+    print("  Trying garnishment weekly...")
     rows = fetch_odyssey_csv(
-        BASE + "/CIVIL/CIVIL_WITH_SERVICE_AND_GARNISHMENT_WEEKLY/", days_back=10)
+        BASE + "/CIVIL/CIVIL_WITH_SERVICE_AND_GARNISHMENT_WEEKLY/",
+        days_back=10)
     if rows and len(rows) > 1:
         header = rows[0]
-        print("  Garnishment columns: " + str(header[:8]))
-        ct_col = None
-        for i, h in enumerate(header):
-            if "CASE TYPE" in str(h).upper():
-                ct_col = i
-                break
-        if ct_col:
-            garni = [header] + [r for r in rows[1:]
-                     if len(r) > ct_col and "GARNISH" in r[ct_col].upper()]
-            if len(garni) > 1:
-                print("  Garnishment records: " + str(len(garni)-1))
-                return sheets_helper.append_new_rows(
-                    SHEET_ID, config.TABS["surplus_funds"], garni, dedup_col=3)
-        else:
-            # Push all weekly records as surplus signals
-            print("  Pushing all " + str(len(rows)-1) + " weekly service records")
-            return sheets_helper.append_new_rows(
-                SHEET_ID, config.TABS["surplus_funds"], rows, dedup_col=3)
+        print("  Garnishment columns: " + str(header[:6]))
+        return sheets_helper.append_new_rows(
+            SHEET_ID, config.TABS["surplus_funds"], rows, dedup_col=3)
 
-    print("  No surplus data found")
+    print("  No surplus data")
     return 0
 
 
