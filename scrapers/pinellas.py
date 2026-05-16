@@ -1,12 +1,3 @@
-# ================================================================
-# PINELLAS COUNTY SCRAPER v4
-# Fixed based on actual log output analysis:
-# - Probate: use date-format filename (EstateNewCaseFilingsDaily_MM-DD-YYYY.csv)
-# - Liens/Judgments: l-file format is instrument-based, not doc-type codes
-# - Tax Deeds: realtdm blocks scrapers, use NEW_CASE_FILINGS_DAILY instead
-# - Surplus Funds: use REGISTRY_TRUST_BALANCES_DAILY (court registry money)
-# ================================================================
-
 import requests
 import csv
 import io
@@ -24,15 +15,14 @@ HEADERS  = {"User-Agent": "Mozilla/5.0 (compatible; PropertyIntel/1.0)"}
 BASE     = config.COUNTIES["pinellas"]["public_base"]
 SHEET_ID = config.COUNTIES["pinellas"]["sheet_id"]
 
+# L-file: col 9 is doc type
+LIEN_CODES     = {"LN","LNMECH","LNHOA","LNIRS","LNCTY","LNCON","LNSTA","LNFED","LNTAX"}
+JUDGMENT_CODES = {"JUD","CCJ","DRJUD","FJUD","JUDO","JUDL","SATJUD"}
+# D-file: col 3 is doc type
+DEED_CODES     = {"TDEED","TAXDEED","CTD","SRTD"}
 
-# ── HELPER: Odyssey CSV directories (LIS PENDENS, EVICTIONS) ────
 
 def fetch_odyssey_csv(directory_url, days_back=7):
-    """
-    Downloads CSVs from Pinellas public files directory.
-    Files named like: Odyssey-JobOutput-May 14, 2026 03-59-52-13754140-2.csv
-    Starts from today (i=0) since we run at 2pm and files post at 9am.
-    """
     try:
         resp = requests.get(directory_url, headers=HEADERS, timeout=20)
         resp.raise_for_status()
@@ -42,8 +32,7 @@ def fetch_odyssey_csv(directory_url, days_back=7):
 
     soup  = BeautifulSoup(resp.text, "html.parser")
     links = [a["href"] for a in soup.find_all("a", href=True)]
-
-    today   = datetime.today()
+    today = datetime.today()
     targets = []
     for i in range(days_back):
         d = today - timedelta(days=i)
@@ -88,17 +77,10 @@ def fetch_odyssey_csv(directory_url, days_back=7):
                     all_rows.extend(rows[1:])
         except Exception as e:
             print("  Error: " + str(e))
-
     return all_rows
 
 
-# ── HELPER: Date-format CSV (PROBATE) ───────────────────────────
-
 def fetch_date_format_csv(base_url, template, days_back=7, min_size=500):
-    """
-    For files named EstateNewCaseFilingsDaily_MM-DD-YYYY.csv
-    Tries today first then works backwards.
-    """
     today = datetime.today()
     for i in range(days_back):
         date  = today - timedelta(days=i)
@@ -122,7 +104,28 @@ def fetch_date_format_csv(base_url, template, days_back=7, min_size=500):
     return []
 
 
-# ── SIGNAL 1: LIS PENDENS ────────────────────────────────────────
+def fetch_or_raw(prefix, days_back=5):
+    today = datetime.today()
+    for i in range(days_back):
+        date  = today - timedelta(days=i)
+        fname = prefix + date.strftime("%Y%m%d") + "01id.52"
+        url   = BASE + "/OFFICIAL_RECORDS/INDEXES_DAILY/" + fname
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=20)
+            if not r.ok or len(r.content) < 50:
+                continue
+            try:
+                text = r.content.decode("utf-8")
+            except UnicodeDecodeError:
+                text = r.content.decode("latin-1")
+            lines = [l for l in text.strip().splitlines() if "|" in l]
+            if lines:
+                print("  Downloaded " + fname + " — " + str(len(lines)) + " lines")
+                return lines, date.strftime("%m/%d/%Y")
+        except Exception as e:
+            print("  " + fname + ": " + str(e))
+    return [], None
+
 
 def scrape_lis_pendens():
     print("\nLIS PENDENS...")
@@ -133,26 +136,18 @@ def scrape_lis_pendens():
     return 0
 
 
-# ── SIGNAL 2: PROBATE ────────────────────────────────────────────
-
 def scrape_probate():
     print("\nPROBATE...")
-    # Files: EstateNewCaseFilingsDaily_05-14-2026.csv
-    # Min size 500 to skip empty 468-byte files
     rows = fetch_date_format_csv(
         BASE + "/PROBATE/NEW_ESTATE_CASE_FILINGS_DAILY/",
         "EstateNewCaseFilingsDaily_{date}.csv",
-        days_back=7,
-        min_size=500
-    )
+        days_back=7, min_size=500)
     if rows:
         return sheets_helper.append_new_rows(
             SHEET_ID, config.TABS["probate"], rows, dedup_col=1)
-    print("  No probate data found")
+    print("  No probate data")
     return 0
 
-
-# ── SIGNAL 3: EVICTIONS ──────────────────────────────────────────
 
 def scrape_evictions():
     print("\nEVICTIONS...")
@@ -163,154 +158,94 @@ def scrape_evictions():
     return 0
 
 
-# ── SIGNAL 4: MECHANIC LIENS + JUDGMENTS ─────────────────────────
-# Source: OFFICIAL_RECORDS/INDEXES_DAILY/l-file
-# Real format discovered from logs:
-# The "doc types" showing as numbers means col[0] is NOT doc type.
-# Need to fetch and inspect actual raw content first line.
-
 def scrape_official_records_index():
     print("\nOFFICIAL RECORDS INDEX...")
-
     lien_count = judgment_count = tax_deed_count = 0
 
-    today = datetime.today()
-    for i in range(5):
-        date  = today - timedelta(days=i)
-        fname = "l" + date.strftime("%Y%m%d") + "01id.52"
-        url   = BASE + "/OFFICIAL_RECORDS/INDEXES_DAILY/" + fname
-        try:
-            r = requests.get(url, headers=HEADERS, timeout=20)
-            if not r.ok or len(r.content) < 50:
+    # L-FILE: col 0=instrument, col 9=doc type, col 7=book, col 8=page
+    lines, filed_date = fetch_or_raw("l")
+    if lines:
+        print("  L-file sample (first 3 lines):")
+        for ln in lines[:3]:
+            print("    " + ln[:120])
+
+        lien_rows = [["Instrument", "Doc Type", "Book", "Page", "Date Filed"]]
+        jud_rows  = [["Instrument", "Doc Type", "Book", "Page", "Date Filed"]]
+        seen      = set()
+        all_types = set()
+
+        for line in lines:
+            parts = line.split("|")
+            if len(parts) < 10:
                 continue
-            try:
-                text = r.content.decode("utf-8")
-            except UnicodeDecodeError:
-                text = r.content.decode("latin-1")
+            instrument = parts[0].strip()
+            doc_type   = parts[9].strip().upper()
+            book       = parts[7].strip() if len(parts) > 7 else ""
+            page       = parts[8].strip() if len(parts) > 8 else ""
+            all_types.add(doc_type)
 
-            lines = text.strip().splitlines()
-            if not lines:
+            if not instrument or instrument in seen:
                 continue
+            seen.add(instrument)
 
-            # Print first 3 lines so we can see actual format
-            print("  l-file sample (first 3 lines):")
-            for ln in lines[:3]:
-                print("    " + ln[:120])
+            if doc_type in LIEN_CODES or doc_type.startswith("LN"):
+                lien_rows.append([instrument, doc_type, book, page, filed_date])
+            elif doc_type in JUDGMENT_CODES or "JUD" in doc_type:
+                jud_rows.append([instrument, doc_type, book, page, filed_date])
 
-            # Parse based on actual pipe format
-            # From sample data: DPA|52||1|FRM|NAME
-            # Fields: DocType|CountyCode|InstrumentNum|SeqNum|FRM_TO|PartyName
-            lien_rows = [["Doc Type", "Instrument", "Party Name", "FRM/TO", "Date Filed"]]
-            jud_rows  = [["Doc Type", "Instrument", "Party Name", "FRM/TO", "Date Filed"]]
-            filed_date = date.strftime("%m/%d/%Y")
+        print("  Doc types in l-file: " + str(sorted(all_types)))
+        print("  Liens: " + str(len(lien_rows)-1))
+        print("  Judgments: " + str(len(jud_rows)-1))
 
-            seen = set()
-            for line in lines:
-                parts = line.split("|")
-                if len(parts) < 4:
-                    continue
+        if len(lien_rows) > 1:
+            lien_count = sheets_helper.append_new_rows(
+                SHEET_ID, config.TABS["mechanic_liens"], lien_rows, dedup_col=1)
+        if len(jud_rows) > 1:
+            judgment_count = sheets_helper.append_new_rows(
+                SHEET_ID, config.TABS["judgments"], jud_rows, dedup_col=1)
 
-                doc_type   = parts[0].strip().upper()
-                instrument = parts[2].strip()
-                frm_to     = parts[4].strip() if len(parts) > 4 else ""
-                party_name = parts[5].strip() if len(parts) > 5 else ""
+    # D-FILE: col 2=instrument, col 3=doc type, col 4=desc, col 5=legal, col 11=date
+    print("  Fetching d-file...")
+    d_lines, d_date = fetch_or_raw("d")
+    if d_lines:
+        print("  D-file sample (first 3 lines):")
+        for ln in d_lines[:3]:
+            print("    " + ln[:120])
 
-                # Skip if instrument already seen
-                if instrument and instrument in seen:
-                    continue
-                if instrument:
-                    seen.add(instrument)
+        deed_rows = [["Instrument", "Doc Type", "Description", "Legal Desc", "Date Filed"]]
+        seen      = set()
+        all_d_types = set()
 
-                # Lien types
-                if any(x in doc_type for x in ["LNMECH","LNHOA","LNIRS","LNCTY","LNCON","LNSTA","LN"]):
-                    lien_rows.append([doc_type, instrument, party_name, frm_to, filed_date])
-                # Judgment types
-                elif any(x in doc_type for x in ["JUD","CCJ","DRJUD","FJUD","JUDO"]):
-                    jud_rows.append([doc_type, instrument, party_name, frm_to, filed_date])
-
-            # Log all unique doc types found for debugging
-            all_types = list(set(line.split("|")[0].strip() for line in lines if "|" in line))
-            print("  Unique doc types in l-file: " + str(sorted(all_types)[:30]))
-            print("  Liens found: " + str(len(lien_rows)-1))
-            print("  Judgments found: " + str(len(jud_rows)-1))
-
-            if len(lien_rows) > 1:
-                lien_count = sheets_helper.append_new_rows(
-                    SHEET_ID, config.TABS["mechanic_liens"], lien_rows, dedup_col=2)
-
-            if len(jud_rows) > 1:
-                judgment_count = sheets_helper.append_new_rows(
-                    SHEET_ID, config.TABS["judgments"], jud_rows, dedup_col=2)
-
-            break  # Got a file, stop
-
-        except Exception as e:
-            print("  l-file error: " + str(e))
-
-    # d-file for tax deeds
-    print("  Fetching d-file for tax deeds...")
-    for i in range(5):
-        date  = today - timedelta(days=i)
-        fname = "d" + date.strftime("%Y%m%d") + "01id.52"
-        url   = BASE + "/OFFICIAL_RECORDS/INDEXES_DAILY/" + fname
-        try:
-            r = requests.get(url, headers=HEADERS, timeout=20)
-            if not r.ok or len(r.content) < 50:
+        for line in d_lines:
+            parts = line.split("|")
+            if len(parts) < 4:
                 continue
-            try:
-                text = r.content.decode("utf-8")
-            except UnicodeDecodeError:
-                text = r.content.decode("latin-1")
+            instrument  = parts[2].strip()
+            doc_type    = parts[3].strip().upper()
+            description = parts[4].strip() if len(parts) > 4 else ""
+            legal_desc  = parts[5].strip() if len(parts) > 5 else ""
+            date_filed  = parts[11].strip() if len(parts) > 11 else (d_date or "")
+            all_d_types.add(doc_type)
 
-            lines = lines = text.strip().splitlines()
-            print("  d-file sample (first 3 lines):")
-            for ln in lines[:3]:
-                print("    " + ln[:120])
+            if not instrument or instrument in seen:
+                continue
+            seen.add(instrument)
 
-            all_types = list(set(line.split("|")[0].strip() for line in lines if "|" in line))
-            print("  Unique doc types in d-file: " + str(sorted(all_types)[:30]))
+            if doc_type in DEED_CODES or "TDEED" in doc_type or "TAX" in doc_type:
+                deed_rows.append([instrument, doc_type, description, legal_desc, date_filed])
 
-            deed_rows = [["Doc Type", "Instrument", "Party Name", "FRM/TO", "Date Filed"]]
-            seen = set()
-            filed_date = date.strftime("%m/%d/%Y")
+        print("  Doc types in d-file: " + str(sorted(all_d_types)))
+        print("  Tax deeds: " + str(len(deed_rows)-1))
 
-            for line in lines:
-                parts = line.split("|")
-                if len(parts) < 4:
-                    continue
-                doc_type   = parts[0].strip().upper()
-                instrument = parts[2].strip()
-                frm_to     = parts[4].strip() if len(parts) > 4 else ""
-                party_name = parts[5].strip() if len(parts) > 5 else ""
-
-                if instrument and instrument in seen:
-                    continue
-                if instrument:
-                    seen.add(instrument)
-
-                if any(x in doc_type for x in ["TDEED","TAXDEED","CTD","SRTD","TAX"]):
-                    deed_rows.append([doc_type, instrument, party_name, frm_to, filed_date])
-
-            if len(deed_rows) > 1:
-                tax_deed_count = sheets_helper.append_new_rows(
-                    SHEET_ID, config.TABS["tax_deeds"], deed_rows, dedup_col=2)
-
-            break
-        except Exception as e:
-            print("  d-file error: " + str(e))
+        if len(deed_rows) > 1:
+            tax_deed_count = sheets_helper.append_new_rows(
+                SHEET_ID, config.TABS["tax_deeds"], deed_rows, dedup_col=1)
 
     return lien_count, judgment_count, tax_deed_count
 
 
-# ── SIGNAL 5: NEW CASE FILINGS (catches judgments + tax deed apps)
-
 def scrape_new_case_filings():
-    """
-    NEW_CASE_FILINGS_DAILY catches civil judgments, small claims,
-    tax deed applications and other case types.
-    Filter for judgment and tax deed case types.
-    """
-    print("\nNEW CASE FILINGS (judgments + tax deed apps)...")
+    print("\nNEW CASE FILINGS...")
     rows = fetch_odyssey_csv(BASE + "/CIVIL/NEW_CASE_FILINGS_DAILY/")
     if not rows or len(rows) < 2:
         print("  No data")
@@ -319,20 +254,18 @@ def scrape_new_case_filings():
     header = rows[0]
     print("  Columns: " + str(header[:8]))
 
-    # Find case type column
     ct_col = None
     for i, h in enumerate(header):
-        if "CASE TYPE" in h.upper() or "CASETYPE" in h.upper():
+        if "CASE TYPE" in str(h).upper():
             ct_col = i
             break
 
     if ct_col is None:
-        print("  Could not find Case Type column")
+        print("  No Case Type column — all cols: " + str(header))
         return 0, 0
 
-    jud_rows  = [header]
-    tax_rows  = [header]
-
+    jud_rows = [header]
+    tax_rows = [header]
     for row in rows[1:]:
         if len(row) <= ct_col:
             continue
@@ -352,30 +285,64 @@ def scrape_new_case_filings():
     if len(tax_rows) > 1:
         tax_added = sheets_helper.append_new_rows(
             SHEET_ID, config.TABS["tax_deeds"], tax_rows, dedup_col=3)
-
     return jud_added, tax_added
 
 
-# ── SIGNAL 6: SURPLUS FUNDS ──────────────────────────────────────
-# Source: CIVIL/REGISTRY_TRUST_BALANCES_DAILY/
-# This is money held in court registry from foreclosure auction
-# surplus — former owners are owed this money
-
 def scrape_surplus_funds():
-    print("\nSURPLUS FUNDS (Registry Trust Balances)...")
-    rows = fetch_odyssey_csv(BASE + "/CIVIL/REGISTRY_TRUST_BALANCES_DAILY/")
-    if not rows or len(rows) < 2:
-        print("  No surplus data found")
-        return 0
+    print("\nSURPLUS FUNDS...")
+    reg_url = BASE + "/CIVIL/REGISTRY_TRUST_BALANCES_DAILY/"
+    try:
+        resp  = requests.get(reg_url, headers=HEADERS, timeout=15)
+        soup  = BeautifulSoup(resp.text, "html.parser")
+        files = [a.get_text().strip() for a in soup.find_all("a") if a.get_text().strip()]
+        print("  Files in registry dir: " + str(files[:10]))
+        links = [a["href"] for a in soup.find_all("a", href=True)
+                 if a["href"].lower().endswith(".csv")]
+        if links:
+            url = reg_url.rstrip("/") + "/" + links[0].split("/")[-1]
+            r   = requests.get(url, headers=HEADERS, timeout=15)
+            if r.ok and len(r.content) > 300:
+                try:
+                    text = r.content.decode("utf-8")
+                except UnicodeDecodeError:
+                    text = r.content.decode("latin-1")
+                reader = csv.reader(io.StringIO(text))
+                rows   = list(reader)
+                if len(rows) > 1:
+                    print("  Columns: " + str(rows[0][:8]))
+                    return sheets_helper.append_new_rows(
+                        SHEET_ID, config.TABS["surplus_funds"], rows, dedup_col=3)
+    except Exception as e:
+        print("  Registry error: " + str(e))
 
-    print("  Columns: " + str(rows[0][:8]))
-    return sheets_helper.append_new_rows(
-        SHEET_ID, config.TABS["surplus_funds"], rows, dedup_col=3)
+    # Fallback: weekly garnishment file
+    print("  Trying garnishment weekly file...")
+    rows = fetch_odyssey_csv(
+        BASE + "/CIVIL/CIVIL_WITH_SERVICE_AND_GARNISHMENT_WEEKLY/", days_back=10)
+    if rows and len(rows) > 1:
+        header = rows[0]
+        print("  Garnishment columns: " + str(header[:8]))
+        ct_col = None
+        for i, h in enumerate(header):
+            if "CASE TYPE" in str(h).upper():
+                ct_col = i
+                break
+        if ct_col:
+            garni = [header] + [r for r in rows[1:]
+                     if len(r) > ct_col and "GARNISH" in r[ct_col].upper()]
+            if len(garni) > 1:
+                print("  Garnishment records: " + str(len(garni)-1))
+                return sheets_helper.append_new_rows(
+                    SHEET_ID, config.TABS["surplus_funds"], garni, dedup_col=3)
+        else:
+            # Push all weekly records as surplus signals
+            print("  Pushing all " + str(len(rows)-1) + " weekly service records")
+            return sheets_helper.append_new_rows(
+                SHEET_ID, config.TABS["surplus_funds"], rows, dedup_col=3)
 
+    print("  No surplus data found")
+    return 0
 
-# ── LEGACY: Tax deeds via realtdm (kept as fallback) ─────────────
 
 def scrape_tax_deeds_and_surplus():
-    """realtdm.com blocks scrapers — returns 0, use new approach above."""
-    print("\nTAX DEEDS (realtdm — blocked, skipping)...")
     return 0
