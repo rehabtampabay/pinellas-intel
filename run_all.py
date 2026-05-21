@@ -32,13 +32,13 @@ COL_MAPS = {
         "name_type": "defendant",   # extract defendant from VS. string
     },
     "probate": {
-        # Title = "IN RE: THE ESTATE OF JOHN SMITH"
-        # Also check Decedent first/last name columns
-        "name":      ["Title", "Style", "Name", "Decedent's Last Name"],
-        "case":      ["Case #", "Case Number"],
-        "date":      ["Date/Time Enter", "Date Filed", "Filing Date"],
-        "case_type": ["Case Type"],
-        "address":   ["Address"],
+        # CSV: "Title"="IN RE: THE ESTATE OF JOHN SMITH"
+        # OR d-file: "Owner / Party"
+        "name":      ["Title", "Owner / Party", "Style", "Name", "Decedent's Last Name"],
+        "case":      ["Case Number", "Case #", "Instrument"],
+        "date":      ["Case Create Date", "Date/Time Enter", "Date Filed", "Filing Date"],
+        "case_type": ["Case Type", "Doc Type", "Case Category"],
+        "address":   ["Rep or Petitioner Attorney's Address", "Address"],
         "amount":    ["Amount"],
         "name_type": "raw",
     },
