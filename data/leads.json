@@ -1,7 +1,7 @@
 {
-  "updated": "2026-05-20 23:50 UTC",
-  "total_new": 207,
-  "total_records": 3967,
+  "updated": "2026-05-21 01:48 UTC",
+  "total_new": 1,
+  "total_records": 3968,
   "hot_count": 104,
   "stacked_count": 0,
   "stack_summary": {
@@ -11,8 +11,8 @@
   },
   "by_county": {
     "Pinellas": {
-      "total": 3967,
-      "new_today": 207,
+      "total": 3968,
+      "new_today": 1,
       "stacked": 0,
       "breakdown": {
         "lis_pendens": 289,
@@ -21,7 +21,7 @@
         "mechanic_liens": 315,
         "judgments": 124,
         "tax_deeds": 0,
-        "surplus_funds": 2
+        "surplus_funds": 3
       }
     }
   },
@@ -47719,6 +47719,28 @@
       "stack_count": 1,
       "stack_signals": [
         "EVICTION"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "surplus_funds",
+      "label": "SURPLUS",
+      "color": "#06b6d4",
+      "name": "\u2014",
+      "filed_by": "",
+      "case": "\u2014",
+      "address": "\u2014",
+      "date": "\u2014",
+      "case_type": "\u2014",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 30,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "SURPLUS"
       ],
       "stack_label": ""
     },
