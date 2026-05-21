@@ -381,12 +381,18 @@ let searchQ = '';
 
 // ── Clean probate name: strip "IN RE: THE ESTATE OF" prefix ──
 function cleanProbateName(name) {
-  if (!name) return name;
+  if (!name || name === '—') return name;
+  // Strip "IN RE:" prefixes to get decedent name
   const prefixes = ['IN RE: THE ESTATE OF ','IN RE: ESTATE OF ',
                     'IN RE: THE MATTER OF ','IN RE: '];
   const upper = name.toUpperCase();
   for (const p of prefixes) {
     if (upper.startsWith(p)) return name.substring(p.length).trim();
+  }
+  // If it looks like "Case# 26OO3438ES Ref# 26-OO3438-ES", return dash
+  if (upper.startsWith('CASE#') || upper.startsWith('SEE IMAGE') ||
+      upper.startsWith('LOT ') || upper.startsWith('SEC ')) {
+    return '—';
   }
   return name;
 }
