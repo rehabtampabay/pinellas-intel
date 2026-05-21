@@ -579,8 +579,10 @@ function openDetail(idx) {
 
   // Build PCPAO lookup URL from name
   const searchName = encodeURIComponent(l.defendant || l.name || '');
-  const pcpaoUrl   = `https://www.pcpao.org/search/results?name=${searchName}`;
-  const clerkUrl   = l.case ? `https://www.pinellasclerk.org/casesearch?q=${encodeURIComponent(l.case)}` : '#';
+  const pcpaoUrl   = `https://www.pcpao.org/Search/OwnerSearch?ownerName=${searchName}&searchType=starts`;
+  const clerkUrl   = l.case
+  ? `https://www.mypinellasclerk.gov/Search/Detail/CaseSearch?q=${encodeURIComponent(l.case)}`
+  : '#';
 
   document.getElementById('dp-content').innerHTML = `
     <div class="dp-signal" style="color:${color}">● ${l.label||'LEAD'}</div>
