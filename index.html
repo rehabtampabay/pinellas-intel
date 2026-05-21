@@ -616,10 +616,10 @@ function openDetail(idx) {
 
     <div class="dp-section">
       <div class="dp-section-title">Quick Actions</div>
-      <a href="${clerkUrl}" target="_blank" style="display:block;width:100%;margin-bottom:8px;padding:9px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:none;text-align:center;letter-spacing:.05em;">
+      <a href="https://www.mypinellasclerk.gov/Search/Detail/CaseSearch?q=${encodeURIComponent(l.case)}" target="_blank" style="display:block;width:100%;margin-bottom:8px;padding:9px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:none;text-align:center;letter-spacing:.05em;">
         🏛️ VIEW COURT RECORD ↗
       </a>
-      <a href="${pcpaoUrl}" target="_blank" style="display:block;width:100%;margin-bottom:8px;padding:9px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:none;text-align:center;letter-spacing:.05em;">
+      <a href="https://www.pcpao.org/Search/OwnerSearch?ownerName=${searchName}&searchType=starts" target="_blank" style="display:block;width:100%;margin-bottom:8px;padding:9px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:none;text-align:center;letter-spacing:.05em;">
         🏠 LOOKUP PROPERTY (PCPAO) ↗
       </a>
       <button class="skip-btn" onclick="copyToClipboard('${(l.defendant||l.name||'').replace(/'/g,'').substring(0,50)}')">
