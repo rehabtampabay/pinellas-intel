@@ -32,8 +32,9 @@ COL_MAPS = {
         "name_type": "defendant",   # extract defendant from VS. string
     },
     "probate": {
-        # Style = estate name / decedent name
-        "name":      ["Style", "Name", "Decedent"],
+        # Title = "IN RE: THE ESTATE OF JOHN SMITH"
+        # Also check Decedent first/last name columns
+        "name":      ["Title", "Style", "Name", "Decedent's Last Name"],
         "case":      ["Case #", "Case Number"],
         "date":      ["Date/Time Enter", "Date Filed", "Filing Date"],
         "case_type": ["Case Type"],
@@ -291,6 +292,16 @@ def load_all_leads():
                     display_name, filed_by = extract_plaintiff(raw_name)
                 else:
                     display_name, filed_by = raw_name, ""
+
+                # Clean probate names: strip "IN RE: THE ESTATE OF " prefix
+                if sig_key == "probate" and display_name:
+                    for prefix in ["IN RE: THE ESTATE OF ",
+                                   "IN RE: ESTATE OF ",
+                                   "IN RE: THE MATTER OF ",
+                                   "IN RE: "]:
+                        if display_name.upper().startswith(prefix):
+                            display_name = display_name[len(prefix):].strip()
+                            break
 
                 # Clean date
                 clean_date = (date_val.split(" ")[0]
