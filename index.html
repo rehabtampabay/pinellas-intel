@@ -360,7 +360,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <div style="font-weight:600;margin-bottom:6px">Property Appraiser (PCPAO)</div>
           <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">Owner info, mailing addresses, assessed values, equity estimates.</div>
           <div style="font-size:10px;color:var(--warm);font-family:var(--mono);margin-bottom:10px">◐ Coming soon — auto-enrich</div>
-          <a href="https://www.pcpao.org" target="_blank" style="font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none;border:1px solid var(--border2);padding:5px 10px;border-radius:5px;display:inline-block">Property Search ↗</a>
+          <a href="https://www.pcpao.gov" target="_blank" style="font-family:var(--mono);font-size:10px;color:var(--accent);text-decoration:none;border:1px solid var(--border2);padding:5px 10px;border-radius:5px;display:inline-block">Property Search ↗</a>
         </div>
       </div>
     </div>
@@ -378,6 +378,18 @@ const COLORS   = {
 let allLeads=[], filtered=[], page=1, sortAsc=false;
 const filters = {signal:'all', heat:'all', casetype:'all'};
 let searchQ = '';
+
+// ── Clean probate name: strip "IN RE: THE ESTATE OF" prefix ──
+function cleanProbateName(name) {
+  if (!name) return name;
+  const prefixes = ['IN RE: THE ESTATE OF ','IN RE: ESTATE OF ',
+                    'IN RE: THE MATTER OF ','IN RE: '];
+  const upper = name.toUpperCase();
+  for (const p of prefixes) {
+    if (upper.startsWith(p)) return name.substring(p.length).trim();
+  }
+  return name;
+}
 
 // ── Extract defendant name from "BANK Vs. JOHN SMITH.et al" ──
 function extractDefendant(name) {
@@ -411,8 +423,10 @@ function showError() {
 
 function render(data) {
   allLeads = (data.leads || []).map(l => {
-    const {plaintiff, defendant} = extractDefendant(l.name);
-    return {...l, plaintiff, defendant};
+    // Clean probate names before extracting defendant
+    const cleanName = l.signal === 'probate' ? cleanProbateName(l.name) : l.name;
+    const {plaintiff, defendant} = extractDefendant(cleanName);
+    return {...l, name: cleanName, plaintiff, defendant};
   });
 
   const b   = data.by_county?.Pinellas?.breakdown || {};
@@ -579,15 +593,22 @@ function openDetail(idx) {
 
   // Build PCPAO lookup URL from name
   const searchName = encodeURIComponent(l.defendant || l.name || '');
-  const pcpaoUrl   = `https://www.pcpao.org/Search/OwnerSearch?ownerName=${searchName}&searchType=starts`;
-  const clerkUrl   = l.case
-  ? `https://www.mypinellasclerk.gov/Search/Detail/CaseSearch?q=${encodeURIComponent(l.case)}`
-  : '#';
+  // Correct Pinellas Clerk case search URL
+  // Format: https://ccmspa.pinellasclerk.org/PublicAccess/Search.aspx?ID=100
+  // with case number pre-filled in the search
+  // Pinellas Clerk: search by case number
+  const clerkUrl = l.case && l.case !== '—'
+    ? `https://courtrecords.mypinellasclerk.gov/MyCr/CaseSearch?CaseNumber=${encodeURIComponent(l.case)}`
+    : 'https://courtrecords.mypinellasclerk.gov/MyCr/';
+
+  // PCPAO: owner name search
+  const pcpaoUrl = `https://www.pcpao.org/general-search#ownerName=${encodeURIComponent(l.defendant || l.name || '')}`;
 
   document.getElementById('dp-content').innerHTML = `
     <div class="dp-signal" style="color:${color}">● ${l.label||'LEAD'}</div>
     <div class="dp-name">${l.defendant||l.name||'—'}</div>
-    ${l.defendant?`<div class="dp-defendant">Filed by: ${l.plaintiff}</div>`:''}
+    ${l.signal==='probate'&&l.case_type?`<div class="dp-defendant" style="color:var(--purple)">${l.case_type}</div>`:
+      l.defendant?`<div class="dp-defendant">Filed by: ${l.plaintiff}</div>`:''}
 
     <div style="display:flex;align-items:center;gap:12px;margin:16px 0;">
       <div>
@@ -616,10 +637,10 @@ function openDetail(idx) {
 
     <div class="dp-section">
       <div class="dp-section-title">Quick Actions</div>
-      <a href="https://www.mypinellasclerk.gov/Search/Detail/CaseSearch?q=${encodeURIComponent(l.case)}" target="_blank" style="display:block;width:100%;margin-bottom:8px;padding:9px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:none;text-align:center;letter-spacing:.05em;">
+      <a href="${clerkUrl}" target="_blank" style="display:block;width:100%;margin-bottom:8px;padding:9px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:none;text-align:center;letter-spacing:.05em;">
         🏛️ VIEW COURT RECORD ↗
       </a>
-      <a href="https://www.pcpao.org/Search/OwnerSearch?ownerName=${searchName}&searchType=starts" target="_blank" style="display:block;width:100%;margin-bottom:8px;padding:9px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:none;text-align:center;letter-spacing:.05em;">
+      <a href="${pcpaoUrl}" target="_blank" style="display:block;width:100%;margin-bottom:8px;padding:9px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:none;text-align:center;letter-spacing:.05em;">
         🏠 LOOKUP PROPERTY (PCPAO) ↗
       </a>
       <button class="skip-btn" onclick="copyToClipboard('${(l.defendant||l.name||'').replace(/'/g,'').substring(0,50)}')">
