@@ -380,23 +380,6 @@ const filters = {signal:'all', heat:'all', casetype:'all'};
 let searchQ = '';
 
 // ── Clean probate name: strip "IN RE: THE ESTATE OF" prefix ──
-function cleanProbateName(name) {
-  if (!name || name === '—') return name;
-  // Strip "IN RE:" prefixes to get decedent name
-  const prefixes = ['IN RE: THE ESTATE OF ','IN RE: ESTATE OF ',
-                    'IN RE: THE MATTER OF ','IN RE: '];
-  const upper = name.toUpperCase();
-  for (const p of prefixes) {
-    if (upper.startsWith(p)) return name.substring(p.length).trim();
-  }
-  // If it looks like "Case# 26OO3438ES Ref# 26-OO3438-ES", return dash
-  if (upper.startsWith('CASE#') || upper.startsWith('SEE IMAGE') ||
-      upper.startsWith('LOT ') || upper.startsWith('SEC ')) {
-    return '—';
-  }
-  return name;
-}
-
 // ── Extract defendant name from "BANK Vs. JOHN SMITH.et al" ──
 function extractDefendant(name) {
   if (!name) return {plaintiff:'—', defendant:'—'};
@@ -429,10 +412,8 @@ function showError() {
 
 function render(data) {
   allLeads = (data.leads || []).map(l => {
-    // Clean probate names before extracting defendant
-    const cleanName = l.signal === 'probate' ? cleanProbateName(l.name) : l.name;
-    const {plaintiff, defendant} = extractDefendant(cleanName);
-    return {...l, name: cleanName, plaintiff, defendant};
+    const {plaintiff, defendant} = extractDefendant(l.name);
+    return {...l, plaintiff, defendant};
   });
 
   const b   = data.by_county?.Pinellas?.breakdown || {};
@@ -552,8 +533,9 @@ function renderTable() {
     const gIdx   = (page-1)*PER_PAGE+idx;
 
     // Show defendant as primary, plaintiff as secondary
-    const primary   = l.defendant || l.name || '—';
-    const secondary = l.defendant ? l.plaintiff : '';
+    // For probate: show decedent as primary, petitioner as secondary
+    const primary   = l.signal === 'probate' ? (l.name || '—') : (l.defendant || l.name || '—');
+    const secondary = l.signal === 'probate' ? (l.petitioner ? 'Petitioner: ' + l.petitioner : '') : (l.defendant ? l.plaintiff : '');
 
     return `<tr class="row-link" onclick="openDetail(${gIdx})">
       <td><span class="sig-tag" style="background:${color}22;color:${color}">${l.label||'—'}</span></td>
@@ -612,9 +594,8 @@ function openDetail(idx) {
 
   document.getElementById('dp-content').innerHTML = `
     <div class="dp-signal" style="color:${color}">● ${l.label||'LEAD'}</div>
-    <div class="dp-name">${l.defendant||l.name||'—'}</div>
-    ${l.signal==='probate'&&l.case_type?`<div class="dp-defendant" style="color:var(--purple)">${l.case_type}</div>`:
-      l.defendant?`<div class="dp-defendant">Filed by: ${l.plaintiff}</div>`:''}
+    <div class="dp-name">${l.signal==='probate' ? (l.name||'—') : (l.defendant||l.name||'—')}</div>
+    ${l.signal==='probate' && l.petitioner ? `<div class="dp-defendant">Petitioner (Contact): ${l.petitioner}</div>` : (l.defendant ? `<div class="dp-defendant">Filed by: ${l.plaintiff}</div>` : '')}
 
     <div style="display:flex;align-items:center;gap:12px;margin:16px 0;">
       <div>
