@@ -278,20 +278,30 @@ def load_all_leads():
             for row in rows[1:]:
                 rec       = {headers[i]: row[i]
                              for i in range(min(len(headers), len(row)))}
-                # For probate: combine Decedent's First + Last name columns
+                # For probate: combine Decedent's First Name + Last Name columns
+                # Also extract petitioner name (the person to call)
                 if sig_key == "probate":
-                    first = ""
-                    last  = ""
+                    first      = ""
+                    last       = ""
+                    pet_first  = ""
+                    pet_middle = ""
+                    pet_last   = ""
                     for k, v in rec.items():
                         ku = k.upper().strip()
-                        if "DECEDENT" in ku and "FIRST" in ku:
-                            first = str(v).strip()
-                        if "DECEDENT" in ku and "LAST" in ku:
-                            last = str(v).strip()
+                        vs = str(v).strip()
+                        if "DECEDENT" in ku and "FIRST" in ku and "MIDDLE" not in ku:
+                            first = vs
+                        if "DECEDENT" in ku and "LAST" in ku and "MIDDLE" not in ku:
+                            last = vs
+                        if ("REP" in ku or "PETITIONER" in ku) and "FIRST" in ku and "MIDDLE" not in ku:
+                            pet_first = vs
+                        if ("REP" in ku or "PETITIONER" in ku) and "MIDDLE" in ku:
+                            pet_middle = vs
+                        if ("REP" in ku or "PETITIONER" in ku) and "LAST" in ku and "MIDDLE" not in ku:
+                            pet_last = vs
                     if first or last:
                         raw_name = (first + " " + last).strip()
                     else:
-                        # Fallback: scan for "IN RE" style or standard column
                         raw_name = "—"
                         for v in rec.values():
                             v = str(v).strip()
@@ -303,8 +313,12 @@ def load_all_leads():
                                     break
                         if raw_name == "—":
                             raw_name = get_col(rec, col_map["name"])
+                    petitioner_name = " ".join(
+                        p for p in [pet_first, pet_middle, pet_last] if p
+                    ).strip()
                 else:
-                    raw_name  = get_col(rec, col_map["name"])
+                    raw_name        = get_col(rec, col_map["name"])
+                    petitioner_name = ""
                 case_num  = get_col(rec, col_map["case"])
                 date_val  = get_col(rec, col_map["date"])
                 case_type = get_col(rec, col_map["case_type"])
@@ -339,12 +353,19 @@ def load_all_leads():
                            "warm" if score >= 40 else "cold")
                 cat     = classify_case_type(case_type)
 
+                # For probate, filed_by = petitioner (person to call)
+                if sig_key == "probate" and petitioner_name:
+                    final_filed_by = petitioner_name[:60]
+                else:
+                    final_filed_by = filed_by[:60]
+
                 all_leads.append({
                     "signal":        sig_key,
                     "label":         label,
                     "color":         color,
                     "name":          display_name[:80],
-                    "filed_by":      filed_by[:60],
+                    "filed_by":      final_filed_by,
+                    "petitioner":    petitioner_name[:60] if sig_key == "probate" else "",
                     "case":          case_num[:40],
                     "address":       address[:80],
                     "date":          clean_date[:15],
