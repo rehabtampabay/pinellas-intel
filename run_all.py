@@ -278,20 +278,31 @@ def load_all_leads():
             for row in rows[1:]:
                 rec       = {headers[i]: row[i]
                              for i in range(min(len(headers), len(row)))}
-                # For probate: scan all columns for "IN RE" or estate-style name
+                # For probate: combine Decedent's First + Last name columns
                 if sig_key == "probate":
-                    raw_name = "—"
-                    for v in rec.values():
-                        v = str(v).strip()
-                        if v and v != "—" and len(v) > 4:
-                            if ("IN RE" in v.upper() or
-                                "ESTATE" in v.upper() or
-                                "MATTER OF" in v.upper()):
-                                raw_name = v
-                                break
-                    # Fallback to standard column lookup if nothing found
-                    if raw_name == "—":
-                        raw_name = get_col(rec, col_map["name"])
+                    first = ""
+                    last  = ""
+                    for k, v in rec.items():
+                        ku = k.upper().strip()
+                        if "DECEDENT" in ku and "FIRST" in ku:
+                            first = str(v).strip()
+                        if "DECEDENT" in ku and "LAST" in ku:
+                            last = str(v).strip()
+                    if first or last:
+                        raw_name = (first + " " + last).strip()
+                    else:
+                        # Fallback: scan for "IN RE" style or standard column
+                        raw_name = "—"
+                        for v in rec.values():
+                            v = str(v).strip()
+                            if v and v != "—" and len(v) > 4:
+                                if ("IN RE" in v.upper() or
+                                    "ESTATE" in v.upper() or
+                                    "MATTER OF" in v.upper()):
+                                    raw_name = v
+                                    break
+                        if raw_name == "—":
+                            raw_name = get_col(rec, col_map["name"])
                 else:
                     raw_name  = get_col(rec, col_map["name"])
                 case_num  = get_col(rec, col_map["case"])
