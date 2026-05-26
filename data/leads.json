@@ -1,6 +1,6 @@
 {
-  "updated": "2026-05-26 02:31 UTC",
-  "total_new": 21,
+  "updated": "2026-05-26 22:52 UTC",
+  "total_new": 0,
   "total_records": 3917,
   "hot_count": 110,
   "stacked_count": 7,
@@ -12,7 +12,7 @@
   "by_county": {
     "Pinellas": {
       "total": 3917,
-      "new_today": 21,
+      "new_today": 0,
       "stacked": 7,
       "breakdown": {
         "lis_pendens": 316,
@@ -45,8 +45,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "LIS PENDENS",
-        "PROBATE"
+        "PROBATE",
+        "LIS PENDENS"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -3013,8 +3013,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "LIS PENDENS",
-        "PROBATE"
+        "PROBATE",
+        "LIS PENDENS"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -3037,8 +3037,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "LIS PENDENS",
-        "PROBATE"
+        "PROBATE",
+        "LIS PENDENS"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -3061,8 +3061,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "PROBATE",
-        "EVICTION"
+        "EVICTION",
+        "PROBATE"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -3407,8 +3407,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "PROBATE",
-        "EVICTION"
+        "EVICTION",
+        "PROBATE"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -57665,8 +57665,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "PROBATE",
-        "EVICTION"
+        "EVICTION",
+        "PROBATE"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -57689,8 +57689,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "PROBATE",
-        "EVICTION"
+        "EVICTION",
+        "PROBATE"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -57714,6 +57714,305 @@
       "stack_count": 1,
       "stack_signals": [
         "EVICTION"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "mechanic_liens",
+      "label": "MECH LIEN",
+      "color": "#f97316",
+      "name": "CRUTCHER HELEN MARLENA",
+      "filed_by": "CHATEAU TOWER INC",
+      "petitioner": "",
+      "case": "2026135251",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "LN",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 35,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "MECH LIEN"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "mechanic_liens",
+      "label": "MECH LIEN",
+      "color": "#f97316",
+      "name": "VINCENT JOSEPH",
+      "filed_by": "GARDENS OF FOREST LAKES CONDOMINIUM ASSOCIATION INC",
+      "petitioner": "",
+      "case": "2026136151",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "LN",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 35,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "MECH LIEN"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "mechanic_liens",
+      "label": "MECH LIEN",
+      "color": "#f97316",
+      "name": "MCMAHON GOLDIE",
+      "filed_by": "STORM PEAK ROOFING INC",
+      "petitioner": "",
+      "case": "2026136791",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "LN",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 35,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "MECH LIEN"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "mechanic_liens",
+      "label": "MECH LIEN",
+      "color": "#f97316",
+      "name": "MCMAHON GOLDIE",
+      "filed_by": "STORM PEAK ROOFING INC",
+      "petitioner": "",
+      "case": "2026136845",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "LN",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 35,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "MECH LIEN"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "judgments",
+      "label": "JUDGMENT",
+      "color": "#14b8a6",
+      "name": "MCMULLEN EDITH",
+      "filed_by": "\u2014",
+      "petitioner": "",
+      "case": "2026135799",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "JUD",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 35,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "JUDGMENT"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "judgments",
+      "label": "JUDGMENT",
+      "color": "#14b8a6",
+      "name": "CAPITAL ONE N A",
+      "filed_by": "\u2014",
+      "petitioner": "",
+      "case": "2026135820",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "JUD",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 35,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "JUDGMENT"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "judgments",
+      "label": "JUDGMENT",
+      "color": "#14b8a6",
+      "name": "JOHNSON RICHARD",
+      "filed_by": "\u2014",
+      "petitioner": "",
+      "case": "2026135827",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "JUD",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 35,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "JUDGMENT"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "judgments",
+      "label": "JUDGMENT",
+      "color": "#14b8a6",
+      "name": "MATLOCK DONYALE",
+      "filed_by": "\u2014",
+      "petitioner": "",
+      "case": "2026135834",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "JUD",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 35,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "JUDGMENT"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "judgments",
+      "label": "JUDGMENT",
+      "color": "#14b8a6",
+      "name": "PROGRESSIVE AMERICAN INSURANCE COMPANY",
+      "filed_by": "\u2014",
+      "petitioner": "",
+      "case": "2026135855",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "CC JUD",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 35,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "JUDGMENT"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "judgments",
+      "label": "JUDGMENT",
+      "color": "#14b8a6",
+      "name": "GIMBEL TERRY N JR",
+      "filed_by": "\u2014",
+      "petitioner": "",
+      "case": "2026136199",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "JUD",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 35,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "JUDGMENT"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "judgments",
+      "label": "JUDGMENT",
+      "color": "#14b8a6",
+      "name": "CARTER TONDRIA Y",
+      "filed_by": "\u2014",
+      "petitioner": "",
+      "case": "2026136222",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "CC JUD",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 35,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "JUDGMENT"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "judgments",
+      "label": "JUDGMENT",
+      "color": "#14b8a6",
+      "name": "GRADIZ LEVI",
+      "filed_by": "\u2014",
+      "petitioner": "",
+      "case": "2026136493",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "JUD",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 35,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "JUDGMENT"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "judgments",
+      "label": "JUDGMENT",
+      "color": "#14b8a6",
+      "name": "STELLER STEPHEN",
+      "filed_by": "\u2014",
+      "petitioner": "",
+      "case": "2026136716",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "JUD",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 35,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "JUDGMENT"
       ],
       "stack_label": ""
     },
@@ -57829,6 +58128,190 @@
       "stack_count": 1,
       "stack_signals": [
         "EVICTION"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "mechanic_liens",
+      "label": "MECH LIEN",
+      "color": "#f97316",
+      "name": "STORM PEAK ROOFING INC",
+      "filed_by": "STORM PEAK ROOFING INC",
+      "petitioner": "",
+      "case": "2026134629",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "LN",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 30,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "MECH LIEN"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "mechanic_liens",
+      "label": "MECH LIEN",
+      "color": "#f97316",
+      "name": "BUILDER SERVICES GROUP INC",
+      "filed_by": "DANIEL INSULATION",
+      "petitioner": "",
+      "case": "2026136000",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "LN",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 30,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "MECH LIEN"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "mechanic_liens",
+      "label": "MECH LIEN",
+      "color": "#f97316",
+      "name": "ORLANDO HEALTH INC",
+      "filed_by": "PREFERRED MATERIALS INC ASPHALT",
+      "petitioner": "",
+      "case": "2026136297",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "LN",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 30,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "MECH LIEN"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "mechanic_liens",
+      "label": "MECH LIEN",
+      "color": "#f97316",
+      "name": "123 4TH WISE LLC",
+      "filed_by": "RESCH ROBERT P III",
+      "petitioner": "",
+      "case": "2026136317",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "LN",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 30,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "MECH LIEN"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "mechanic_liens",
+      "label": "MECH LIEN",
+      "color": "#f97316",
+      "name": "PARKSIDE SPB CONDOMINIUM ASSOCIATION INC",
+      "filed_by": "BELFOR USA GROUP INC",
+      "petitioner": "",
+      "case": "2026136322",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "LN",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 30,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "MECH LIEN"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "mechanic_liens",
+      "label": "MECH LIEN",
+      "color": "#f97316",
+      "name": "DUKE ENERGY FLORIDA LLC",
+      "filed_by": "NATIVE CONSTRUCTION GROUP",
+      "petitioner": "",
+      "case": "2026136539",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "LN",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 30,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "MECH LIEN"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "judgments",
+      "label": "JUDGMENT",
+      "color": "#14b8a6",
+      "name": "BAHIA VISTA UNIT III CONDOMINIUM ASSOCATION INC",
+      "filed_by": "\u2014",
+      "petitioner": "",
+      "case": "2026135702",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "JUD",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 30,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "JUDGMENT"
+      ],
+      "stack_label": ""
+    },
+    {
+      "signal": "judgments",
+      "label": "JUDGMENT",
+      "color": "#14b8a6",
+      "name": "ALPHA GURU AVIATION SERVICES HOLDINGS INC",
+      "filed_by": "\u2014",
+      "petitioner": "",
+      "case": "2026136829",
+      "address": "\u2014",
+      "date": "05/22/2026",
+      "case_type": "JUD",
+      "category": "other",
+      "amount": "\u2014",
+      "score": 30,
+      "heat": "cold",
+      "county": "Pinellas",
+      "stacked": false,
+      "stack_count": 1,
+      "stack_signals": [
+        "JUDGMENT"
       ],
       "stack_label": ""
     },
@@ -58109,29 +58592,6 @@
       "stack_label": ""
     },
     {
-      "signal": "judgments",
-      "label": "JUDGMENT",
-      "color": "#14b8a6",
-      "name": "FANTIN LOUIS A",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026135702",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "BAHIA VISTA UNIT III CONDOMINIUM ASSOCATION INC",
-      "category": "condo_hoa",
-      "amount": "\u2014",
-      "score": 25,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "JUDGMENT"
-      ],
-      "stack_label": ""
-    },
-    {
       "signal": "evictions",
       "label": "EVICTION",
       "color": "#f59e0b",
@@ -58151,282 +58611,6 @@
       "stack_count": 1,
       "stack_signals": [
         "EVICTION"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "mechanic_liens",
-      "label": "MECH LIEN",
-      "color": "#f97316",
-      "name": "DANIEL INSULATION",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026136000",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "BUILDER SERVICES GROUP INC",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 20,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "MECH LIEN"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "mechanic_liens",
-      "label": "MECH LIEN",
-      "color": "#f97316",
-      "name": "RESCH ROBERT P III",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026136317",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "123 4TH WISE LLC",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 20,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "MECH LIEN"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "mechanic_liens",
-      "label": "MECH LIEN",
-      "color": "#f97316",
-      "name": "BELFOR USA GROUP INC",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026136322",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "PARKSIDE SPB CONDOMINIUM ASSOCIATION INC",
-      "category": "condo_hoa",
-      "amount": "\u2014",
-      "score": 20,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "MECH LIEN"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "mechanic_liens",
-      "label": "MECH LIEN",
-      "color": "#f97316",
-      "name": "NATIVE CONSTRUCTION GROUP",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026136539",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "DUKE ENERGY FLORIDA LLC",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 20,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "MECH LIEN"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "judgments",
-      "label": "JUDGMENT",
-      "color": "#14b8a6",
-      "name": "DISCOVER BANK",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026135799",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "MCMULLEN EDITH",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 20,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "JUDGMENT"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "judgments",
-      "label": "JUDGMENT",
-      "color": "#14b8a6",
-      "name": "DISCOVER BANK",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026135820",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "CAPITAL ONE N A",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 20,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "JUDGMENT"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "judgments",
-      "label": "JUDGMENT",
-      "color": "#14b8a6",
-      "name": "DISCOVER BANK",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026135827",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "JOHNSON RICHARD",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 20,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "JUDGMENT"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "judgments",
-      "label": "JUDGMENT",
-      "color": "#14b8a6",
-      "name": "SYNCHRONY BANK",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026135834",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "MATLOCK DONYALE",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 20,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "JUDGMENT"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "judgments",
-      "label": "JUDGMENT",
-      "color": "#14b8a6",
-      "name": "FERNANDEZ JOEL",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026135855",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "PROGRESSIVE AMERICAN INSURANCE COMPANY",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 20,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "JUDGMENT"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "judgments",
-      "label": "JUDGMENT",
-      "color": "#14b8a6",
-      "name": "CREDIT ACCEPTANCE CORP",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026136199",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "GIMBEL TERRY N JR",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 20,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "JUDGMENT"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "judgments",
-      "label": "JUDGMENT",
-      "color": "#14b8a6",
-      "name": "CITIBANK N A",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026136493",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "GRADIZ LEVI",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 20,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "JUDGMENT"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "judgments",
-      "label": "JUDGMENT",
-      "color": "#14b8a6",
-      "name": "ST PETERSBURG",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026136829",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "ALPHA GURU AVIATION SERVICES HOLDINGS INC",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 20,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "JUDGMENT"
       ],
       "stack_label": ""
     },
@@ -72457,190 +72641,6 @@
       "stack_count": 1,
       "stack_signals": [
         "EVICTION"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "mechanic_liens",
-      "label": "MECH LIEN",
-      "color": "#f97316",
-      "name": "STORM PEAK ROOFING INC",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026134629",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "STORM PEAK ROOFING INC",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 15,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "MECH LIEN"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "mechanic_liens",
-      "label": "MECH LIEN",
-      "color": "#f97316",
-      "name": "CHATEAU TOWER INC",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026135251",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "CRUTCHER HELEN MARLENA",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 15,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "MECH LIEN"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "mechanic_liens",
-      "label": "MECH LIEN",
-      "color": "#f97316",
-      "name": "GARDENS OF FOREST LAKES CONDOMINIUM ASSOCIATION INC",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026136151",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "VINCENT JOSEPH",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 15,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "MECH LIEN"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "mechanic_liens",
-      "label": "MECH LIEN",
-      "color": "#f97316",
-      "name": "PREFERRED MATERIALS INC ASPHALT",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026136297",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "ORLANDO HEALTH INC",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 15,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "MECH LIEN"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "mechanic_liens",
-      "label": "MECH LIEN",
-      "color": "#f97316",
-      "name": "STORM PEAK ROOFING INC",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026136791",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "MCMAHON GOLDIE",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 15,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "MECH LIEN"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "mechanic_liens",
-      "label": "MECH LIEN",
-      "color": "#f97316",
-      "name": "STORM PEAK ROOFING INC",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026136845",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "MCMAHON GOLDIE",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 15,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "MECH LIEN"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "judgments",
-      "label": "JUDGMENT",
-      "color": "#14b8a6",
-      "name": "PORTFOLIO RECOVERY ASSOCIATES LLC",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026136222",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "CARTER TONDRIA Y",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 15,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "JUDGMENT"
-      ],
-      "stack_label": ""
-    },
-    {
-      "signal": "judgments",
-      "label": "JUDGMENT",
-      "color": "#14b8a6",
-      "name": "GREENWOODS EQUIPMENT FINANCE LLC",
-      "filed_by": "\u2014",
-      "petitioner": "",
-      "case": "2026136716",
-      "address": "\u2014",
-      "date": "OR",
-      "case_type": "STELLER STEPHEN",
-      "category": "other",
-      "amount": "\u2014",
-      "score": 15,
-      "heat": "cold",
-      "county": "Pinellas",
-      "stacked": false,
-      "stack_count": 1,
-      "stack_signals": [
-        "JUDGMENT"
       ],
       "stack_label": ""
     },
