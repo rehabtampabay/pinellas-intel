@@ -382,6 +382,16 @@ def scrape_official_records_index():
                                    doc_type, book, page, filed_date])
 
             elif doc_upper in JUDGMENT_CODES or "JUD" in doc_upper:
+                # Skip JUD LN (judgment liens filed by state/clerk — not actionable)
+                if "JUD LN" in doc_upper or "JUD LN" == doc_upper:
+                    continue
+                # Skip if property owner is blank, "FLORIDA", or a govt entity
+                SKIP_OWNERS = {"FLORIDA", "FLA", "PINELLAS", ""}
+                if prop_owner.upper().strip() in SKIP_OWNERS:
+                    continue
+                # Skip if creditor is Pinellas Clerk (these are court-filed, not creditor judgments)
+                if filer.upper().strip() in SKIP_FILERS:
+                    continue
                 jud_rows.append([instrument, filer, prop_owner,
                                   doc_type, book, page, filed_date])
 
