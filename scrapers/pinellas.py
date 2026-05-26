@@ -321,11 +321,23 @@ def scrape_official_records_index():
 
     # ── L-FILE: liens, judgments, LP ──
     lines, filed_date = fetch_or_raw("l")
+
+    # Filers to skip — these are not motivated seller signals
+    SKIP_FILERS = {
+        "PINELLAS CLERK OF THE CIRCUIT COURT",
+        "FLORIDA DEPARTMENT OF REVENUE",
+        "INTERNAL REVENUE SERVICE",
+        "FLORIDA",
+        "FLA",
+        "PINELLAS",
+        "PINELLAS CONSTRUCTION LICENSING BOARD",
+    }
+
     if lines:
-        lien_rows = [["Instrument", "Owner / Party", "Doc Type",
-                       "Book", "Page", "Date Filed"]]
-        jud_rows  = [["Instrument", "Owner / Party", "Doc Type",
-                       "Book", "Page", "Date Filed"]]
+        lien_rows = [["Instrument", "Lien Filer", "Property Owner",
+                       "Doc Type", "Book", "Page", "Date Filed"]]
+        jud_rows  = [["Instrument", "Judgment Creditor", "Property Owner",
+                       "Doc Type", "Book", "Page", "Date Filed"]]
         lp_rows   = [["Instrument", "Owner / Party", "Doc Type",
                        "Book", "Page", "Date Filed"]]
         seen      = set()
@@ -346,19 +358,32 @@ def scrape_official_records_index():
                 continue
             seen.add(instrument)
 
-            # Look up party name
-            names = party_lookup.get(instrument, [])
-            owner = names[0] if names else ""
-
-            row = [instrument, owner, doc_type, book, page, filed_date]
+            # p-file lookup: get both FRM (filer/creditor) and TO (property owner)
+            p_entries  = party_lookup.get(instrument, [])
+            filer      = ""
+            prop_owner = ""
+            for entry in p_entries:
+                if not filer:
+                    filer = entry          # first entry = FRM (creditor/filer)
+                elif not prop_owner:
+                    prop_owner = entry     # second entry = TO (property owner)
 
             if doc_upper in LP_CODES:
-                lp_rows.append(row)
-            elif doc_upper in LIEN_CODES or (
-                    doc_upper.startswith("LN") and "JUD" not in doc_upper):
-                lien_rows.append(row)
+                owner = p_entries[0] if p_entries else ""
+                lp_rows.append([instrument, owner, doc_type, book, page, filed_date])
+
+            elif doc_upper == "LN" or (
+                    doc_upper.startswith("LN") and "JUD" not in doc_upper
+                    and "IRS" not in doc_upper):
+                # True mechanic/contractor liens only — skip govt/HOA filers
+                if filer.upper() in SKIP_FILERS:
+                    continue
+                lien_rows.append([instrument, filer, prop_owner,
+                                   doc_type, book, page, filed_date])
+
             elif doc_upper in JUDGMENT_CODES or "JUD" in doc_upper:
-                jud_rows.append(row)
+                jud_rows.append([instrument, filer, prop_owner,
+                                  doc_type, book, page, filed_date])
 
         print("  Doc types: " + str(sorted(all_types)))
         print("  LP: " + str(len(lp_rows)-1) +
