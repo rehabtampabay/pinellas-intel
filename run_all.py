@@ -55,24 +55,28 @@ COL_MAPS = {
         "name_type": "plaintiff",   # extract plaintiff from VS. string
     },
     "mechanic_liens": {
-        # OR index format: Instrument | Owner / Party | Doc Type | Book | Page | Date Filed
-        "name":      ["Owner / Party", "Party Name", "name", "Name"],
-        "case":      ["Instrument", "instrument", "Case #"],
-        "date":      ["Date Filed", "date_filed", "Date/Time Enter"],
-        "case_type": ["Doc Type", "doc_type", "Case Type"],
+        # OR index: Instrument | Lien Filer | Property Owner | Doc Type | Book | Page | Date Filed
+        # Property Owner = person being liened (who we call)
+        # Lien Filer = contractor who filed the lien
+        "name":      ["Property Owner", "Owner / Party", "Party Name", "Name"],
+        "case":      ["Instrument", "Case #"],
+        "date":      ["Date Filed", "Date/Time Enter"],
+        "case_type": ["Doc Type", "Case Type"],
         "address":   ["Address"],
         "amount":    ["Amount"],
         "name_type": "raw",
+        "filed_by_col": ["Lien Filer"],   # contractor name shown as secondary
     },
     "judgments": {
-        # OR index format: same as mechanic liens
-        "name":      ["Owner / Party", "Party Name", "Style", "name", "Name"],
-        "case":      ["Instrument", "instrument", "Case #", "Case Number"],
-        "date":      ["Date Filed", "Date/Time Enter", "date_filed"],
-        "case_type": ["Doc Type", "Case Type", "doc_type"],
+        # OR index: Instrument | Judgment Creditor | Property Owner | Doc Type | Book | Page | Date Filed
+        "name":      ["Property Owner", "Owner / Party", "Party Name", "Style", "Name"],
+        "case":      ["Instrument", "Case #", "Case Number"],
+        "date":      ["Date Filed", "Date/Time Enter"],
+        "case_type": ["Doc Type", "Case Type"],
         "address":   ["Address"],
         "amount":    ["Amount"],
         "name_type": "raw",
+        "filed_by_col": ["Judgment Creditor"],
     },
     "tax_deeds": {
         "name":      ["Owner / Party", "Description", "Style", "name"],
@@ -324,6 +328,8 @@ def load_all_leads():
                 case_type = get_col(rec, col_map["case_type"])
                 address   = get_col(rec, col_map["address"])
                 amount    = get_col(rec, col_map.get("amount", ["Amount"]))
+                # For mech liens / judgments: show filer as secondary info
+                filer_name = get_col(rec, col_map.get("filed_by_col", [])) if col_map.get("filed_by_col") else ""
 
                 # Name extraction based on signal type
                 if name_type == "defendant" and " VS. " in raw_name.upper():
@@ -353,9 +359,12 @@ def load_all_leads():
                            "warm" if score >= 40 else "cold")
                 cat     = classify_case_type(case_type)
 
-                # For probate, filed_by = petitioner (person to call)
+                # For probate: filed_by = petitioner
+                # For mech liens/judgments: filed_by = contractor/creditor
                 if sig_key == "probate" and petitioner_name:
                     final_filed_by = petitioner_name[:60]
+                elif sig_key in ("mechanic_liens", "judgments") and filer_name:
+                    final_filed_by = filer_name[:60]
                 else:
                     final_filed_by = filed_by[:60]
 
