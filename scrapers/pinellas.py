@@ -254,10 +254,12 @@ def build_party_lookup(date_str=None):
     p2026051501id.52
     Each line: InstrNum|...|...|...|FRM_or_TO|PartyName|...
     """
-    print("  Building party name lookup from p-file...")
-    today = datetime.today()
-    
-    for i in range(5):
+    print("  Building party name lookup from p-files (last 7 days)...")
+    today  = datetime.today()
+    lookup = {}
+    loaded = 0
+
+    for i in range(7):
         date  = today - timedelta(days=i)
         fname = "p" + date.strftime("%Y%m%d") + "01id.52"
         url   = BASE + "/OFFICIAL_RECORDS/INDEXES_DAILY/" + fname
@@ -269,24 +271,22 @@ def build_party_lookup(date_str=None):
                 text = r.content.decode("utf-8")
             except UnicodeDecodeError:
                 text = r.content.decode("latin-1")
-            
+
             lines = [l for l in text.strip().splitlines() if "|" in l]
             if not lines:
                 continue
 
-            # Print sample to confirm format
-            print("  P-file sample (first 3 lines):")
-            for ln in lines[:3]:
-                print("    " + ln[:120])
+            # Print sample from first file found
+            if loaded == 0:
+                print("  P-file sample (first 3 lines):")
+                for ln in lines[:3]:
+                    print("    " + ln[:120])
 
-            # Build lookup: instrument -> list of party names
-            lookup = {}
+            # Accumulate all days into one lookup
             for line in lines:
                 parts = line.split("|")
                 if len(parts) < 6:
                     continue
-                # From the DPA format we saw earlier:
-                # DocType|CountyCode|InstrumentNum|SeqNum|FRM_TO|PartyName
                 instrument = parts[2].strip()
                 party_name = parts[5].strip() if len(parts) > 5 else ""
                 frm_to     = parts[4].strip() if len(parts) > 4 else ""
@@ -294,20 +294,22 @@ def build_party_lookup(date_str=None):
                 if instrument and party_name:
                     if instrument not in lookup:
                         lookup[instrument] = []
-                    # Prefer FRM (grantor/debtor) names
+                    # Prefer FRM (grantor/debtor) = the property owner/debtor
                     if frm_to.upper() in ("FRM", "FROM", "GRANTOR", "DEBTOR"):
                         lookup[instrument].insert(0, party_name)
                     else:
                         lookup[instrument].append(party_name)
-
-            print("  P-file loaded: " + str(len(lookup)) + " instrument parties")
-            return lookup
+            loaded += 1
 
         except Exception as e:
-            print("  P-file error: " + str(e))
+            print("  " + fname + ": " + str(e))
 
-    print("  No p-file found — names will be blank")
-    return {}
+    if lookup:
+        print("  P-files loaded: " + str(loaded) + " days | " +
+              str(len(lookup)) + " instruments indexed")
+    else:
+        print("  No p-file data found — names will be blank")
+    return lookup
 
 
 def scrape_official_records_index():
