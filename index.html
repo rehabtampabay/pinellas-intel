@@ -300,7 +300,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <input class="search-box" id="search" type="text"
           placeholder="🔍  Search by name, defendant, case #, or type..."
           oninput="onSearch()">
-        <select class="ctl" id="sort-sel" onchange="applyFilters()">
+        <select class="ctl" id="sort-sel" onchange="sortAsc=(this.value==='name');applyFilters()">
           <option value="score">Score ↓</option>
           <option value="name">Name A–Z</option>
           <option value="date">Date ↓</option>
@@ -490,7 +490,7 @@ function applyFilters() {
     return true;
   });
 
-  // Sort
+  // Sort — always use sortAsc flag, set correctly by sortBy() and dropdown
   const field = document.getElementById('sort-sel').value;
   filtered.sort((a,b) => {
     let av = field==='score' ? (a.score||0) : (a[field]||'');
