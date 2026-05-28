@@ -375,7 +375,7 @@ const COLORS   = {
   mechanic_liens:'#f97316',judgments:'#14b8a6',tax_deeds:'#22c55e'
 };
 
-let allLeads=[], filtered=[], page=1, sortAsc=false;
+let allLeads=[], filtered=[], page=1, sortAsc=false, sortField='score';
 const filters = {signal:'all', heat:'all', casetype:'all'};
 let searchQ = '';
 
@@ -504,7 +504,12 @@ function applyFilters() {
 }
 
 function sortBy(field) {
-  sortAsc = document.getElementById('sort-sel').value === field ? !sortAsc : (field==='name');
+  if (document.getElementById('sort-sel').value === field) {
+    sortAsc = !sortAsc;
+  } else {
+    // Default: name=asc, everything else=desc (newest/highest first)
+    sortAsc = (field === 'name');
+  }
   document.getElementById('sort-sel').value = field;
   applyFilters();
 }
