@@ -1,5 +1,5 @@
 {
-  "updated": "2026-05-28 03:34 UTC",
+  "updated": "2026-05-28 03:38 UTC",
   "total_new": 0,
   "total_records": 3225,
   "hot_count": 112,
@@ -45,8 +45,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "LIS PENDENS",
-        "PROBATE"
+        "PROBATE",
+        "LIS PENDENS"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -3059,8 +3059,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "LIS PENDENS",
-        "PROBATE"
+        "PROBATE",
+        "LIS PENDENS"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -3083,8 +3083,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "LIS PENDENS",
-        "PROBATE"
+        "PROBATE",
+        "LIS PENDENS"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -3107,8 +3107,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "EVICTION",
-        "PROBATE"
+        "PROBATE",
+        "EVICTION"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -3453,8 +3453,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "EVICTION",
-        "PROBATE"
+        "PROBATE",
+        "EVICTION"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -40737,8 +40737,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "EVICTION",
-        "PROBATE"
+        "PROBATE",
+        "EVICTION"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -40761,8 +40761,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "EVICTION",
-        "PROBATE"
+        "PROBATE",
+        "EVICTION"
       ],
       "stack_label": "STACKED 2x"
     },
