@@ -456,10 +456,9 @@ def scrape_official_records_index():
             tax_deed_count = sheets_helper.append_new_rows(
                 SHEET_ID, config.TABS["tax_deeds"], deed_rows, dedup_col=1)
 
-        if len(probate_rows) > 1:
-            p_added = sheets_helper.append_new_rows(
-                SHEET_ID, config.TABS["probate"], probate_rows, dedup_col=1)
-            print("  + " + str(p_added) + " probate recordings from OR")
+        # D-file probate recordings have no names or useful data — skip them
+        # Real probate data comes from the CSV in SIGNAL 2 above
+        print("  + 0 probate recordings from OR (suppressed — no usable data)")
 
     return lien_count + lp_count, judgment_count, tax_deed_count
 
