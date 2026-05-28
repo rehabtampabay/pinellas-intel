@@ -492,9 +492,16 @@ function applyFilters() {
 
   // Sort — always use sortAsc flag, set correctly by sortBy() and dropdown
   const field = document.getElementById('sort-sel').value;
+  function normDate(d) {
+    if (!d || d==='—') return '';
+    // Convert MM/DD/YYYY to YYYY-MM-DD for correct sorting
+    const m = d.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (m) return m[3]+'-'+m[1]+'-'+m[2];
+    return d;
+  }
   filtered.sort((a,b) => {
-    let av = field==='score' ? (a.score||0) : (a[field]||'');
-    let bv = field==='score' ? (b.score||0) : (b[field]||'');
+    let av = field==='score' ? (a.score||0) : field==='date' ? normDate(a.date) : (a[field]||'');
+    let bv = field==='score' ? (b.score||0) : field==='date' ? normDate(b.date) : (b[field]||'');
     if (av < bv) return sortAsc ? -1 : 1;
     if (av > bv) return sortAsc ? 1 : -1;
     return 0;
