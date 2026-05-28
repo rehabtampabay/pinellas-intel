@@ -349,9 +349,17 @@ def load_all_leads():
                             display_name = display_name[len(prefix):].strip()
                             break
 
-                # Clean date
-                clean_date = (date_val.split(" ")[0]
-                              if date_val and " " in date_val else date_val)
+                # Clean and normalize date to YYYY-MM-DD for correct sorting
+                raw_date = (date_val.split(" ")[0]
+                            if date_val and " " in date_val else date_val)
+                clean_date = raw_date
+                if raw_date:
+                    for fmt in ("%m/%d/%Y", "%Y-%m-%d", "%m-%d-%Y", "%Y/%m/%d"):
+                        try:
+                            clean_date = datetime.strptime(raw_date.strip(), fmt).strftime("%Y-%m-%d")
+                            break
+                        except ValueError:
+                            continue
 
                 # Score and classify
                 score   = score_lead(sig_key, case_type, display_name, date_val)
