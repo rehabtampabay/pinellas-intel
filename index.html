@@ -19,7 +19,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background-image:linear-gradient(rgba(59,130,246,.03) 1px,transparent 1px),
   linear-gradient(90deg,rgba(59,130,246,.03) 1px,transparent 1px);
   background-size:40px 40px;}
-
 /* TOPBAR */
 .topbar{position:sticky;top:0;z-index:100;background:rgba(11,14,20,.96);
   backdrop-filter:blur(12px);border-bottom:1px solid var(--border);
@@ -39,10 +38,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   font-family:var(--mono);font-size:11px;padding:7px 14px;border-radius:6px;
   cursor:pointer;letter-spacing:.05em;transition:all .2s;}
 .refresh-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff;}
-
 /* LAYOUT */
 .layout{display:flex;position:relative;z-index:1;}
-
 /* SIDEBAR */
 .sidebar{width:210px;min-height:calc(100vh - 56px);border-right:1px solid var(--border);
   padding:16px 0;flex-shrink:0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;}
@@ -60,16 +57,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   font-size:10px;padding:1px 5px;border-radius:3px;}
 .badge.live{background:rgba(34,197,94,.12);color:var(--green);}
 .badge.soon{background:var(--border);color:var(--muted);opacity:.5;}
-
 /* CONTENT */
 .content{flex:1;padding:20px 24px;min-width:0;}
-
 /* TABS */
 .tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;}
 .tab{font-family:var(--mono);font-size:11px;padding:9px 16px;border-bottom:2px solid transparent;
   cursor:pointer;color:var(--muted);letter-spacing:.06em;transition:all .15s;}
 .tab:hover{color:var(--text);}.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-
 /* METRIC CARDS */
 .metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:20px;}
 .mc{background:var(--surface);border:1px solid var(--border);border-radius:10px;
@@ -79,7 +73,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   margin-bottom:5px;font-family:var(--mono);}
 .mc-val{font-family:var(--mono);font-size:26px;font-weight:700;}
 .mc-sub{font-size:10px;color:var(--muted);margin-top:3px;}
-
 /* CONTROLS */
 .controls{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
 .search-box{background:var(--surface);border:1px solid var(--border);color:var(--text);
@@ -90,7 +83,6 @@ select.ctl{background:var(--surface);border:1px solid var(--border);color:var(--
   font-family:var(--mono);font-size:10px;padding:6px 8px;border-radius:5px;outline:none;}
 .rec-count{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto;}
 .updated-tag{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:10px;}
-
 /* TABLE */
 .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
 table{width:100%;border-collapse:collapse;}
@@ -99,14 +91,12 @@ th{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:upp
   color:var(--muted);padding:9px 12px;text-align:left;font-weight:400;
   cursor:pointer;white-space:nowrap;user-select:none;}
 th:hover{color:var(--text);}
+th.sort-active{color:var(--accent);}
 td{padding:9px 12px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:rgba(255,255,255,.02);}
-
-/* DETAIL PANEL */
-.row-link{cursor:pointer;}
-
 /* CELL STYLES */
+.row-link{cursor:pointer;}
 .sig-tag{display:inline-block;font-family:var(--mono);font-size:9px;padding:3px 6px;
   border-radius:3px;letter-spacing:.05em;font-weight:700;white-space:nowrap;}
 .heat-badge{display:inline-flex;align-items:center;gap:3px;font-family:var(--mono);
@@ -124,7 +114,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .name-vs{font-size:10px;color:var(--muted);margin-top:1px;}
 .case-cell{font-family:var(--mono);font-size:10px;color:var(--muted);}
 .type-cell{font-size:10px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-
+/* new-today highlight */
+.new-dot{display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:var(--green);margin-right:4px;flex-shrink:0;vertical-align:middle;}
 /* PAGINATION */
 .pagination{display:flex;align-items:center;justify-content:center;gap:6px;padding:14px;}
 .pg-btn{background:var(--border);border:1px solid var(--border2);color:var(--text);
@@ -135,7 +127,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .pg-btn:disabled{opacity:.3;cursor:default;}
 .pg-info{font-family:var(--mono);font-size:10px;color:var(--muted);}
 .empty{text-align:center;padding:60px;color:var(--muted);font-family:var(--mono);font-size:11px;}
-
 /* DETAIL PANEL */
 .detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;backdrop-filter:blur(4px);}
 .detail-panel{position:absolute;right:0;top:0;bottom:0;width:380px;background:var(--surface);
@@ -160,7 +151,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
   background:var(--accent);border:none;color:#fff;font-family:var(--mono);
   font-size:11px;cursor:pointer;letter-spacing:.05em;transition:all .2s;}
 .skip-btn:hover{background:#2563eb;}
-
 /* LOADING */
 #loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;
   align-items:center;justify-content:center;z-index:999;gap:14px;transition:opacity .4s;}
@@ -168,14 +158,11 @@ tr:hover td{background:rgba(255,255,255,.02);}
   border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 #loading p{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.1em;}
-
 @media(max-width:768px){.sidebar{display:none;}.content{padding:12px;}}
 </style>
 </head>
 <body>
-
 <div id="loading"><div class="spinner"></div><p>LOADING INTEL...</p></div>
-
 <!-- DETAIL OVERLAY -->
 <div class="detail-overlay" id="detail-overlay" onclick="closeDetail(event)">
   <div class="detail-panel" id="detail-panel">
@@ -183,7 +170,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div id="dp-content"></div>
   </div>
 </div>
-
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="brand">
@@ -200,7 +186,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <button class="refresh-btn" onclick="loadData()">⟳ REFRESH</button>
   </div>
 </header>
-
 <div class="layout">
   <!-- SIDEBAR -->
   <aside class="sidebar">
@@ -235,7 +220,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <span class="badge" id="b-tax_deeds">0</span>
       </div>
     </div>
-
     <div class="sb-section">
       <div class="sb-label">HEAT</div>
       <div class="fi active" onclick="setFilter('heat','all',this)">
@@ -249,7 +233,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div class="fl">⚡ Warm (40–59)</div>
       </div>
     </div>
-
     <div class="sb-section">
       <div class="sb-label">CASE TYPE</div>
       <div class="fi active" onclick="setFilter('casetype','all',this)">
@@ -265,7 +248,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div class="fl">🏬 Condo/HOA</div>
       </div>
     </div>
-
     <div class="sb-section">
       <div class="sb-label">COUNTIES</div>
       <div class="fi active">
@@ -282,7 +264,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
       </div>
     </div>
   </aside>
-
   <!-- CONTENT -->
   <main class="content">
     <div class="tabs">
@@ -291,16 +272,19 @@ tr:hover td{background:rgba(255,255,255,.02);}
       </div>
       <div class="tab" onclick="switchTab('sources',this)">Data Sources</div>
     </div>
-
     <!-- LIVE FEED -->
     <div id="tab-feed">
       <div class="metrics" id="metrics-grid"></div>
-
       <div class="controls">
         <input class="search-box" id="search" type="text"
           placeholder="🔍  Search by name, defendant, case #, or type..."
           oninput="onSearch()">
-        <select class="ctl" id="sort-sel" onchange="sortAsc=(this.value==='name');applyFilters()">
+        <!--
+          FIX: onchange now sets BOTH sortField and sortAsc correctly.
+          date/score/signal all default to descending (newest/highest first).
+          name defaults to ascending (A-Z).
+        -->
+        <select class="ctl" id="sort-sel" onchange="onSortDropdown(this.value)">
           <option value="score">Score ↓</option>
           <option value="name">Name A–Z</option>
           <option value="date">Date ↓</option>
@@ -308,19 +292,17 @@ tr:hover td{background:rgba(255,255,255,.02);}
         </select>
         <span class="rec-count" id="rec-count">0 records</span>
       </div>
-
       <div class="updated-tag">UPDATED: <span id="updated-time">—</span></div>
-
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th onclick="sortBy('signal')">Signal</th>
-              <th onclick="sortBy('name')">Defendant / Owner</th>
-              <th onclick="sortBy('case')">Case #</th>
+              <th onclick="sortBy('signal')" id="th-signal">Signal</th>
+              <th onclick="sortBy('name')" id="th-name">Defendant / Owner</th>
+              <th onclick="sortBy('case')" id="th-case">Case #</th>
               <th>Case Type</th>
-              <th onclick="sortBy('date')">Date</th>
-              <th onclick="sortBy('score')">Score</th>
+              <th onclick="sortBy('date')" id="th-date">Date ↓</th>
+              <th onclick="sortBy('score')" id="th-score">Score</th>
               <th>Heat</th>
               <th>County</th>
             </tr>
@@ -330,7 +312,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
       </div>
       <div class="pagination" id="pagination"></div>
     </div>
-
     <!-- DATA SOURCES -->
     <div id="tab-sources" style="display:none">
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
@@ -366,7 +347,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
     </div>
   </main>
 </div>
-
 <script>
 const DATA_URL = 'https://rehabtampabay.github.io/pinellas-intel/data/leads.json';
 const PER_PAGE = 50;
@@ -375,18 +355,34 @@ const COLORS   = {
   mechanic_liens:'#f97316',judgments:'#14b8a6',tax_deeds:'#22c55e'
 };
 
-let allLeads=[], filtered=[], page=1, sortAsc=false, sortField='score';
+// ── State ──
+// sortField and sortAsc are the single source of truth.
+// The dropdown and column header clicks both write to these.
+let allLeads=[], filtered=[], page=1;
+let sortField = 'date';   // DEFAULT: sort by date
+let sortAsc   = false;    // DEFAULT: descending (newest first)
 const filters = {signal:'all', heat:'all', casetype:'all'};
 let searchQ = '';
 
-// ── Clean probate name: strip "IN RE: THE ESTATE OF" prefix ──
-// ── Extract defendant name from "BANK Vs. JOHN SMITH.et al" ──
+// ── Normalize any date to YYYY-MM-DD for correct string sort ──
+function normDate(d) {
+  if (!d || d === '—') return '0000-00-00'; // blanks sink to bottom on desc
+  d = String(d).trim();
+  // MM/DD/YYYY → YYYY-MM-DD
+  let m = d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return m[3] + '-' + m[1].padStart(2,'0') + '-' + m[2].padStart(2,'0');
+  // already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}/.test(d)) return d.substring(0,10);
+  return '0000-00-00';
+}
+
+// ── Extract plaintiff/defendant from "BANK Vs. JOHN SMITH.et al" ──
 function extractDefendant(name) {
   if (!name) return {plaintiff:'—', defendant:'—'};
   const vsIdx = name.toUpperCase().indexOf(' VS. ');
   if (vsIdx === -1) return {plaintiff: name, defendant: ''};
-  const plaintiff  = name.substring(0, vsIdx).trim();
-  let   defendant  = name.substring(vsIdx + 5).trim();
+  const plaintiff = name.substring(0, vsIdx).trim();
+  let   defendant = name.substring(vsIdx + 5).trim();
   defendant = defendant.replace(/\.et al\.?$/i,'').replace(/\. et al\.?$/i,'').trim();
   return {plaintiff, defendant};
 }
@@ -404,7 +400,6 @@ async function loadData() {
   document.getElementById('loading').style.opacity = '0';
   setTimeout(()=> document.getElementById('loading').style.display='none', 400);
 }
-
 function showError() {
   document.getElementById('leads-tbody').innerHTML =
     '<tr><td colspan="8" class="empty">Could not load data — try refreshing</td></tr>';
@@ -416,34 +411,35 @@ function render(data) {
     return {...l, plaintiff, defendant};
   });
 
-  const b   = data.by_county?.Pinellas?.breakdown || {};
-  const hot = allLeads.filter(l=>l.heat==='hot').length;
+  // Count new today: prefer added_today flag on records, fallback to data.total_new
+  const newToday = allLeads.filter(l => l.added_today === true).length || (data.total_new || 0);
+  const hot      = allLeads.filter(l => l.heat === 'hot').length;
 
   // Topbar
   document.getElementById('stat-total').textContent = allLeads.length.toLocaleString();
   document.getElementById('stat-hot').textContent   = hot;
-  document.getElementById('stat-new').textContent   = data.total_new || 0;
+  document.getElementById('stat-new').textContent   = newToday;
   document.getElementById('updated-time').textContent = data.updated || '—';
   document.getElementById('tc-total').textContent   = allLeads.length.toLocaleString();
 
   // Sidebar badges
-  document.getElementById('b-all').textContent          = allLeads.length;
-  document.getElementById('b-hot').textContent          = hot;
-  document.getElementById('b-lis_pendens').textContent  = allLeads.filter(l=>l.signal==='lis_pendens').length;
-  document.getElementById('b-probate').textContent      = allLeads.filter(l=>l.signal==='probate').length;
-  document.getElementById('b-evictions').textContent    = allLeads.filter(l=>l.signal==='evictions').length;
-  document.getElementById('b-mechanic_liens').textContent=allLeads.filter(l=>l.signal==='mechanic_liens').length;
-  document.getElementById('b-judgments').textContent    = allLeads.filter(l=>l.signal==='judgments').length;
-  document.getElementById('b-tax_deeds').textContent    = allLeads.filter(l=>l.signal==='tax_deeds').length;
+  document.getElementById('b-all').textContent           = allLeads.length;
+  document.getElementById('b-hot').textContent           = hot;
+  document.getElementById('b-lis_pendens').textContent   = allLeads.filter(l=>l.signal==='lis_pendens').length;
+  document.getElementById('b-probate').textContent       = allLeads.filter(l=>l.signal==='probate').length;
+  document.getElementById('b-evictions').textContent     = allLeads.filter(l=>l.signal==='evictions').length;
+  document.getElementById('b-mechanic_liens').textContent= allLeads.filter(l=>l.signal==='mechanic_liens').length;
+  document.getElementById('b-judgments').textContent     = allLeads.filter(l=>l.signal==='judgments').length;
+  document.getElementById('b-tax_deeds').textContent     = allLeads.filter(l=>l.signal==='tax_deeds').length;
 
   // Metric cards
   const cards = [
-    {key:'lis_pendens',   label:'Lis Pendens',    sub:'pre-foreclosure',   ca:'#ef4444'},
-    {key:'probate',       label:'Probate',         sub:'estate filings',    ca:'#a78bfa'},
-    {key:'evictions',     label:'Evictions',       sub:'writ of possession',ca:'#f59e0b'},
-    {key:'mechanic_liens',label:'Mechanic Liens',  sub:'contractor liens',  ca:'#f97316'},
-    {key:'judgments',     label:'Judgments',       sub:'court judgments',   ca:'#14b8a6'},
-    {key:'tax_deeds',     label:'Tax Deeds',       sub:'delinquent/auction',ca:'#22c55e'},
+    {key:'lis_pendens',   label:'LIS PENDENS',    sub:'pre-foreclosure',    ca:'#ef4444'},
+    {key:'probate',       label:'PROBATE',         sub:'estate filings',     ca:'#a78bfa'},
+    {key:'evictions',     label:'EVICTIONS',       sub:'writ of possession', ca:'#f59e0b'},
+    {key:'mechanic_liens',label:'MECHANIC LIENS',  sub:'contractor liens',   ca:'#f97316'},
+    {key:'judgments',     label:'JUDGMENTS',       sub:'court judgments',    ca:'#14b8a6'},
+    {key:'tax_deeds',     label:'TAX DEEDS',       sub:'delinquent/auction', ca:'#22c55e'},
   ];
   document.getElementById('metrics-grid').innerHTML = cards.map(c => {
     const count = allLeads.filter(l=>l.signal===c.key).length;
@@ -454,7 +450,51 @@ function render(data) {
     </div>`;
   }).join('');
 
+  // Sync dropdown to current sort state and render
+  document.getElementById('sort-sel').value = sortField;
+  updateSortHeaders();
   applyFilters();
+}
+
+// ── Called when dropdown changes ──
+function onSortDropdown(val) {
+  sortField = val;
+  // name = A-Z (ascending), everything else = newest/highest first (descending)
+  sortAsc = (val === 'name');
+  page = 1;
+  updateSortHeaders();
+  applyFilters();
+}
+
+// ── Called when a column header is clicked ──
+function sortBy(field) {
+  if (sortField === field) {
+    sortAsc = !sortAsc; // toggle direction
+  } else {
+    sortField = field;
+    sortAsc   = (field === 'name'); // name=asc, everything else=desc
+  }
+  document.getElementById('sort-sel').value = sortField;
+  page = 1;
+  updateSortHeaders();
+  applyFilters();
+}
+
+// ── Highlight the active sort column header ──
+function updateSortHeaders() {
+  ['signal','name','case','date','score'].forEach(f => {
+    const el = document.getElementById('th-' + f);
+    if (!el) return;
+    el.classList.toggle('sort-active', f === sortField);
+    // Update arrow indicator
+    if (f === sortField) {
+      const base = {signal:'Signal',name:'Defendant / Owner',case:'Case #',date:'Date',score:'Score'}[f];
+      el.textContent = base + (sortAsc ? ' ↑' : ' ↓');
+    } else {
+      const base = {signal:'Signal',name:'Defendant / Owner',case:'Case #',date:'Date',score:'Score'}[f];
+      if (base) el.textContent = base;
+    }
+  });
 }
 
 // ── Filters ──
@@ -465,7 +505,6 @@ function setFilter(type, val, el) {
   page = 1;
   applyFilters();
 }
-
 function onSearch() {
   searchQ = document.getElementById('search').value.toLowerCase();
   page = 1;
@@ -479,9 +518,9 @@ function applyFilters() {
     if (filters.heat === 'warm' && l.heat !== 'warm') return false;
     if (filters.casetype !== 'all') {
       const ct = (l.case_type || '').toLowerCase();
-      if (filters.casetype === 'homestead'    && !ct.includes('homestead'))     return false;
-      if (filters.casetype === 'non-homestead'&& !ct.includes('non-homestead')) return false;
-      if (filters.casetype === 'condo'        && !ct.includes('condo'))         return false;
+      if (filters.casetype === 'homestead'     && !ct.includes('homestead'))     return false;
+      if (filters.casetype === 'non-homestead' && !ct.includes('non-homestead')) return false;
+      if (filters.casetype === 'condo'         && !ct.includes('condo'))         return false;
     }
     if (searchQ) {
       const hay = [l.name,l.defendant,l.plaintiff,l.case,l.case_type].join(' ').toLowerCase();
@@ -490,74 +529,68 @@ function applyFilters() {
     return true;
   });
 
-  // Sort — always use sortAsc flag, set correctly by sortBy() and dropdown
-  const field = document.getElementById('sort-sel').value;
-  function normDate(d) {
-    if (!d || d==='—') return '';
-    // Convert MM/DD/YYYY to YYYY-MM-DD for correct sorting
-    const m = d.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (m) return m[3]+'-'+m[1]+'-'+m[2];
-    return d;
-  }
-  filtered.sort((a,b) => {
-    let av = field==='score' ? (a.score||0) : field==='date' ? normDate(a.date) : (a[field]||'');
-    let bv = field==='score' ? (b.score||0) : field==='date' ? normDate(b.date) : (b[field]||'');
+  // ── Sort using sortField + sortAsc (single source of truth) ──
+  filtered.sort((a, b) => {
+    let av, bv;
+    if (sortField === 'score') {
+      av = a.score || 0;
+      bv = b.score || 0;
+    } else if (sortField === 'date') {
+      av = normDate(a.date);
+      bv = normDate(b.date);
+    } else {
+      av = (a[sortField] || '').toString().toLowerCase();
+      bv = (b[sortField] || '').toString().toLowerCase();
+    }
     if (av < bv) return sortAsc ? -1 : 1;
     if (av > bv) return sortAsc ? 1 : -1;
-    return 0;
+    // secondary sort: higher score first
+    return (b.score||0) - (a.score||0);
   });
 
   renderTable();
 }
 
-function sortBy(field) {
-  if (document.getElementById('sort-sel').value === field) {
-    sortAsc = !sortAsc;
-  } else {
-    // Default: name=asc, everything else=desc (newest/highest first)
-    sortAsc = (field === 'name');
-  }
-  document.getElementById('sort-sel').value = field;
-  applyFilters();
-}
-
 // ── Table ──
 function renderTable() {
   const total = filtered.length;
-  const pages = Math.ceil(total/PER_PAGE)||1;
-  if (page>pages) page=pages;
+  const pages = Math.ceil(total / PER_PAGE) || 1;
+  if (page > pages) page = pages;
   const slice = filtered.slice((page-1)*PER_PAGE, page*PER_PAGE);
-
   document.getElementById('rec-count').textContent = total.toLocaleString() + ' records';
 
   const tbody = document.getElementById('leads-tbody');
   if (!slice.length) {
     tbody.innerHTML = '<tr><td colspan="8" class="empty">NO LEADS MATCH FILTER</td></tr>';
-    renderPagination(0,1);
+    renderPagination(0, 1);
     return;
   }
 
-  tbody.innerHTML = slice.map((l,idx) => {
-    const color  = COLORS[l.signal]||'#64748b';
-    const hcls   = 'heat-'+(l.heat||'cold');
-    const htxt   = l.heat==='hot'?'🔥 HOT':l.heat==='warm'?'⚡ WARM':'❄️ COLD';
-    const fill   = Math.min(l.score||0, 100);
-    const gIdx   = (page-1)*PER_PAGE+idx;
+  tbody.innerHTML = slice.map((l, idx) => {
+    const color   = COLORS[l.signal] || '#64748b';
+    const hcls    = 'heat-' + (l.heat || 'cold');
+    const htxt    = l.heat==='hot' ? '🔥 HOT' : l.heat==='warm' ? '⚡ WARM' : '❄️ COLD';
+    const fill    = Math.min(l.score || 0, 100);
+    const gIdx    = (page-1)*PER_PAGE + idx;
+    const isNew   = l.added_today === true;
 
-    // Show defendant as primary, plaintiff as secondary
-    // For probate: show decedent as primary, petitioner as secondary
+    // Primary/secondary name logic
     const primary   = l.signal === 'probate' ? (l.name || '—') : (l.defendant || l.name || '—');
-    const secondary = l.signal === 'probate' ? (l.petitioner ? 'Petitioner: ' + l.petitioner : '') : (l.defendant ? l.plaintiff : '');
+    const secondary = l.signal === 'probate'
+      ? (l.petitioner ? 'Petitioner: ' + l.petitioner : '')
+      : (l.defendant ? l.plaintiff : '');
+
+    const dateDisplay = l.date || '—';
 
     return `<tr class="row-link" onclick="openDetail(${gIdx})">
       <td><span class="sig-tag" style="background:${color}22;color:${color}">${l.label||'—'}</span></td>
       <td>
-        <div class="name-main">${primary.substring(0,45)}${primary.length>45?'...':''}</div>
-        ${secondary?`<div class="name-vs">${secondary.substring(0,40)}${secondary.length>40?'...':''}</div>`:''}
+        <div class="name-main">${isNew ? '<span class="new-dot" title="Added today"></span>' : ''}${primary.substring(0,45)}${primary.length>45?'...':''}</div>
+        ${secondary ? `<div class="name-vs">${secondary.substring(0,40)}${secondary.length>40?'...':''}</div>` : ''}
       </td>
       <td><span class="case-cell">${l.case||'—'}</span></td>
       <td><span class="type-cell" title="${l.case_type||''}">${(l.case_type||'—').substring(0,35)}${(l.case_type||'').length>35?'...':''}</span></td>
-      <td><span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${l.date||'—'}</span></td>
+      <td><span style="font-family:var(--mono);font-size:10px;color:${isNew?'var(--green)':'var(--muted)'}">${dateDisplay}</span></td>
       <td><div class="score-wrap">
         <div class="score-bar"><div class="score-fill" style="width:${fill}%"></div></div>
         <span class="score-num">${l.score||0}</span>
@@ -572,43 +605,34 @@ function renderTable() {
 
 function renderPagination(total, pages) {
   const el = document.getElementById('pagination');
-  if (pages<=1){el.innerHTML='';return;}
+  if (pages <= 1) { el.innerHTML = ''; return; }
   let html = `<button class="pg-btn" onclick="goPage(${page-1})" ${page===1?'disabled':''}>← PREV</button>`;
-  const s=Math.max(1,page-2), e=Math.min(pages,page+2);
-  for(let i=s;i<=e;i++) html+=`<button class="pg-btn ${i===page?'active':''}" onclick="goPage(${i})">${i}</button>`;
+  const s = Math.max(1, page-2), e = Math.min(pages, page+2);
+  for (let i=s; i<=e; i++) html += `<button class="pg-btn ${i===page?'active':''}" onclick="goPage(${i})">${i}</button>`;
   html += `<button class="pg-btn" onclick="goPage(${page+1})" ${page===pages?'disabled':''}>NEXT →</button>`;
   html += `<span class="pg-info">${page} of ${pages} &nbsp;·&nbsp; ${total.toLocaleString()} records</span>`;
   el.innerHTML = html;
 }
-
-function goPage(p){page=p;renderTable();window.scrollTo(0,200);}
+function goPage(p) { page=p; renderTable(); window.scrollTo(0,200); }
 
 // ── Detail Panel ──
 function openDetail(idx) {
-  const l   = filtered[idx];
+  const l = filtered[idx];
   if (!l) return;
-  const color= COLORS[l.signal]||'#64748b';
-  const hcls = 'heat-'+(l.heat||'cold');
-  const htxt = l.heat==='hot'?'🔥 HOT':l.heat==='warm'?'⚡ WARM':'❄️ COLD';
-
-  // Build PCPAO lookup URL from name
-  const searchName = encodeURIComponent(l.defendant || l.name || '');
-  // Correct Pinellas Clerk case search URL
-  // Format: https://ccmspa.pinellasclerk.org/PublicAccess/Search.aspx?ID=100
-  // with case number pre-filled in the search
-  // Pinellas Clerk: search by case number
+  const color = COLORS[l.signal] || '#64748b';
+  const hcls  = 'heat-' + (l.heat || 'cold');
+  const htxt  = l.heat==='hot' ? '🔥 HOT' : l.heat==='warm' ? '⚡ WARM' : '❄️ COLD';
   const clerkUrl = l.case && l.case !== '—'
     ? `https://courtrecords.mypinellasclerk.gov/MyCr/CaseSearch?CaseNumber=${encodeURIComponent(l.case)}`
     : 'https://courtrecords.mypinellasclerk.gov/MyCr/';
-
-  // PCPAO: owner name search
   const pcpaoUrl = `https://www.pcpao.org/general-search#ownerName=${encodeURIComponent(l.defendant || l.name || '')}`;
 
   document.getElementById('dp-content').innerHTML = `
     <div class="dp-signal" style="color:${color}">● ${l.label||'LEAD'}</div>
     <div class="dp-name">${l.signal==='probate' ? (l.name||'—') : (l.defendant||l.name||'—')}</div>
-    ${l.signal==='probate' && l.petitioner ? `<div class="dp-defendant">Petitioner (Contact): ${l.petitioner}</div>` : (l.defendant ? `<div class="dp-defendant">Filed by: ${l.plaintiff}</div>` : '')}
-
+    ${l.signal==='probate' && l.petitioner
+      ? `<div class="dp-defendant">Petitioner (Contact): ${l.petitioner}</div>`
+      : (l.defendant ? `<div class="dp-defendant">Filed by: ${l.plaintiff}</div>` : '')}
     <div style="display:flex;align-items:center;gap:12px;margin:16px 0;">
       <div>
         <div class="dp-score-big">${l.score||0}</div>
@@ -616,59 +640,53 @@ function openDetail(idx) {
       </div>
       <div>
         <div class="heat-badge ${hcls}" style="font-size:13px;padding:6px 14px">${htxt}</div>
+        ${l.added_today ? '<div style="font-family:var(--mono);font-size:9px;color:var(--green);margin-top:6px">● ADDED TODAY</div>' : ''}
       </div>
     </div>
-
     <div class="dp-section">
       <div class="dp-section-title">Case Details</div>
       <div class="dp-row"><span class="dp-key">Case #</span><span class="dp-val">${l.case||'—'}</span></div>
       <div class="dp-row"><span class="dp-key">Signal</span><span class="dp-val">${l.label||'—'}</span></div>
       <div class="dp-row"><span class="dp-key">Case Type</span><span class="dp-val">${l.case_type||'—'}</span></div>
       <div class="dp-row"><span class="dp-key">Date Filed</span><span class="dp-val">${l.date||'—'}</span></div>
-      ${l.amount?`<div class="dp-row"><span class="dp-key">Amount</span><span class="dp-val" style="color:var(--hot)">${l.amount}</span></div>`:''}
+      ${l.amount ? `<div class="dp-row"><span class="dp-key">Amount</span><span class="dp-val" style="color:var(--hot)">${l.amount}</span></div>` : ''}
     </div>
-
     <div class="dp-section">
       <div class="dp-section-title">Property</div>
-      <div class="dp-row"><span class="dp-key">Address</span><span class="dp-val">${l.address&&l.address!=='—'?l.address:'Lookup required'}</span></div>
+      <div class="dp-row"><span class="dp-key">Address</span><span class="dp-val">${l.address && l.address!=='—' ? l.address : 'Lookup required'}</span></div>
       <div class="dp-row"><span class="dp-key">County</span><span class="dp-val">${l.county||'Pinellas'}</span></div>
     </div>
-
     <div class="dp-section">
       <div class="dp-section-title">Quick Actions</div>
-      <a href="${clerkUrl}" target="_blank" style="display:block;width:100%;margin-bottom:8px;padding:9px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:none;text-align:center;letter-spacing:.05em;">
+      <a href="${clerkUrl}" target="_blank" style="display:block;width:100%;margin-bottom:8px;padding:9px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;text-decoration:none;text-align:center;letter-spacing:.05em;">
         🏛️ VIEW COURT RECORD ↗
       </a>
-      <a href="${pcpaoUrl}" target="_blank" style="display:block;width:100%;margin-bottom:8px;padding:9px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-decoration:none;text-align:center;letter-spacing:.05em;">
+      <a href="${pcpaoUrl}" target="_blank" style="display:block;width:100%;margin-bottom:8px;padding:9px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;text-decoration:none;text-align:center;letter-spacing:.05em;">
         🏠 LOOKUP PROPERTY (PCPAO) ↗
       </a>
-      <button class="skip-btn" onclick="copyToClipboard('${(l.defendant||l.name||'').replace(/'/g,'').substring(0,50)}')">
+      <button class="skip-btn" onclick="copyToClipboard('${(l.defendant||l.name||'').replace(/'/g,'').replace(/"/g,'').substring(0,50)}')">
         📋 COPY NAME FOR SKIP TRACE
       </button>
     </div>
   `;
-  document.getElementById('detail-overlay').style.display='block';
+  document.getElementById('detail-overlay').style.display = 'block';
 }
 
 function closeDetail(e) {
-  if (!e || e.target===document.getElementById('detail-overlay'))
-    document.getElementById('detail-overlay').style.display='none';
+  if (!e || e.target === document.getElementById('detail-overlay'))
+    document.getElementById('detail-overlay').style.display = 'none';
 }
-
 function copyToClipboard(text) {
-  navigator.clipboard.writeText(text).then(()=>{
-    alert('Copied: ' + text);
-  });
+  navigator.clipboard.writeText(text).then(()=>{ alert('Copied: ' + text); });
 }
-
-function switchTab(id,el) {
-  document.getElementById('tab-feed').style.display    = id==='feed'    ? '':'none';
-  document.getElementById('tab-sources').style.display = id==='sources' ? '':'none';
+function switchTab(id, el) {
+  document.getElementById('tab-feed').style.display    = id==='feed'    ? '' : 'none';
+  document.getElementById('tab-sources').style.display = id==='sources' ? '' : 'none';
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
 }
 
-window.onload = ()=> setTimeout(loadData, 200);
+window.onload = () => setTimeout(loadData, 200);
 </script>
 </body>
 </html>
