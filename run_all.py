@@ -17,61 +17,51 @@ from scrapers.pinellas import (
 )
 
 # ── Column maps — matched to ACTUAL sheet column names ───────────
-# For each signal, list possible column names in priority order.
-# The code tries each one and uses the first that has a value.
+# "Date/Time Entered" (with 'd') is the real column name in Lis Pendens Raw
+# and Evictions Raw. Previously was mistyped as "Date/Time Enter" (no 'd').
 
 COL_MAPS = {
     "lis_pendens": {
-        # Style = "BANK VS. JOHN SMITH" — defendant is the homeowner
         "name":      ["Style", "Name"],
         "case":      ["Case #", "Case Number", "Instrument"],
-        "date":      ["Date/Time Enter", "Date Filed", "Filing Date"],
+        "date":      ["Date/Time Entered", "Date/Time Enter", "Event Status Date", "Date Filed", "Filing Date"],
         "case_type": ["Case Type"],
         "address":   ["Address"],
         "amount":    ["Amount"],
-        "name_type": "defendant",   # extract defendant from VS. string
+        "name_type": "defendant",
     },
     "probate": {
-        # CSV: "Title"="IN RE: THE ESTATE OF JOHN SMITH"
-        # OR d-file: "Owner / Party"
         "name":      ["Title", "Owner / Party", "Style", "Name", "Decedent's Last Name"],
         "case":      ["Case Number", "Case #", "Instrument"],
-        "date":      ["Case Create Date", "Date/Time Enter", "Date Filed", "Filing Date"],
+        "date":      ["Case Create Date", "Date/Time Entered", "Date/Time Enter", "Date Filed", "Filing Date"],
         "case_type": ["Case Type", "Doc Type", "Case Category"],
         "address":   ["Rep or Petitioner Attorney's Address", "Address"],
         "amount":    ["Amount"],
         "name_type": "raw",
     },
     "evictions": {
-        # Style = "LANDLORD VS. TENANT"
-        # We want the PLAINTIFF (landlord) — they are the property owner
-        # Also check the new "Owner (Plaintiff)" column we added
         "name":      ["Owner (Plaintiff)", "Style", "Name"],
         "case":      ["Case #", "Case Number"],
-        "date":      ["Date/Time Enter", "Date Filed"],
+        "date":      ["Date/Time Entered", "Date/Time Enter", "Event Status Date", "Date Filed"],
         "case_type": ["Case Type"],
         "address":   ["Address"],
         "amount":    ["Amount"],
-        "name_type": "plaintiff",   # extract plaintiff from VS. string
+        "name_type": "plaintiff",
     },
     "mechanic_liens": {
-        # OR index: Instrument | Lien Filer | Property Owner | Doc Type | Book | Page | Date Filed
-        # Property Owner = person being liened (who we call)
-        # Lien Filer = contractor who filed the lien
         "name":      ["Property Owner", "Owner / Party", "Party Name", "Name"],
         "case":      ["Instrument", "Case #"],
-        "date":      ["Date Filed", "Date/Time Enter"],
+        "date":      ["Date Filed", "Date/Time Entered", "Date/Time Enter"],
         "case_type": ["Doc Type", "Case Type"],
         "address":   ["Address"],
         "amount":    ["Amount"],
         "name_type": "raw",
-        "filed_by_col": ["Lien Filer"],   # contractor name shown as secondary
+        "filed_by_col": ["Lien Filer"],
     },
     "judgments": {
-        # OR index: Instrument | Judgment Creditor | Property Owner | Doc Type | Book | Page | Date Filed
         "name":      ["Property Owner", "Owner / Party", "Party Name", "Style", "Name"],
         "case":      ["Instrument", "Case #", "Case Number"],
-        "date":      ["Date Filed", "Date/Time Enter"],
+        "date":      ["Date Filed", "Date/Time Entered", "Date/Time Enter"],
         "case_type": ["Doc Type", "Case Type"],
         "address":   ["Address"],
         "amount":    ["Amount"],
@@ -81,7 +71,7 @@ COL_MAPS = {
     "tax_deeds": {
         "name":      ["Owner / Party", "Description", "Style", "name"],
         "case":      ["Instrument", "Case #", "Case Number"],
-        "date":      ["Date Filed", "Date/Time Enter", "date_filed"],
+        "date":      ["Date Filed", "Date/Time Entered", "Date/Time Enter", "date_filed"],
         "case_type": ["Doc Type", "Case Type"],
         "address":   ["Address"],
         "amount":    ["Opening Bid", "Amount"],
@@ -90,7 +80,7 @@ COL_MAPS = {
     "surplus_funds": {
         "name":      ["Style", "Name", "Party Name", "Note"],
         "case":      ["Case #", "Case Number", "Source File"],
-        "date":      ["Date/Time Enter", "Date Filed", "Date"],
+        "date":      ["Date/Time Entered", "Date/Time Enter", "Date Filed", "Date"],
         "case_type": ["Case Type", "Note"],
         "address":   ["Address"],
         "amount":    ["Amount", "Balance"],
@@ -108,7 +98,6 @@ def get_col(rec, keys):
 
 
 def extract_defendant(style):
-    """Bank VS. HOMEOWNER → returns HOMEOWNER, Bank"""
     if not style or " VS. " not in style.upper():
         return style, ""
     idx = style.upper().find(" VS. ")
@@ -119,7 +108,6 @@ def extract_defendant(style):
 
 
 def extract_plaintiff(style):
-    """LANDLORD VS. Tenant → returns LANDLORD, Tenant"""
     if not style or " VS. " not in style.upper():
         return style, ""
     idx = style.upper().find(" VS. ")
@@ -130,52 +118,24 @@ def extract_plaintiff(style):
 
 
 def classify_case_type(case_type_str):
-    """
-    Returns a clean property category from the raw Pinellas case type string.
-    Used for filtering on the dashboard.
-    
-    Pinellas actual case type strings include:
-    - "REAL PROP/MTGE FRCL HOMESTEAD RES1 $0 - $50,000"
-    - "REAL PROP/MTGE FRCL NON-HOMESTEAD RES3 $250,000 OR MORE"
-    - "REAL PROP - MORTGAGE FORECLOSURE - COUNTY $15,001 - $30,000"
-    - "CONDOMINIUM - COUNTY $15,001 - $30,000"
-    - "RESIDENTIAL EVICTION POSSESSION ONLY (NON-MONETARY)"
-    - "NON RESIDENTIAL EVICTION DAMAGES $0 - $2,500"
-    """
     ct = (case_type_str or "").upper()
-
     if not ct or ct == "—":
         return "other"
-
-    # Condo / HOA — check before homestead since some strings have both
     if any(x in ct for x in ["CONDO", "HOA", "HOMEOWNERS ASSOC",
                                "CONDOMINIUM", "ASSOCIATION"]):
         return "condo_hoa"
-
-    # Non-homestead
     if "NON-HOMESTEAD" in ct or "NON HOMESTEAD" in ct:
         return "non_homestead"
-
-    # Homestead
     if "HOMESTEAD" in ct:
         return "homestead"
-
-    # Residential eviction
     if "RESIDENTIAL EVICTION" in ct or "WRIT OF POSSESSION" in ct:
         return "residential"
-
-    # Non-residential eviction / commercial
     if "NON RESIDENTIAL" in ct or "COMMERCIAL" in ct or "BUSINESS" in ct:
         return "commercial"
-
-    # Probate / estate
     if any(x in ct for x in ["PROBATE", "ESTATE", "GUARDIAN", "TRUST"]):
         return "probate_estate"
-
-    # Dissolution / divorce
     if any(x in ct for x in ["DISSOLUTION", "DIVORCE", "DOMESTIC"]):
         return "dissolution"
-
     return "other"
 
 
@@ -186,23 +146,19 @@ def score_lead(sig_key, case_type, name, date_str):
     n     = (name or "").upper()
     cat   = classify_case_type(case_type)
 
-    # Category bonuses
     if cat == "homestead":       score += 15
     if cat == "non_homestead":   score += 8
     if cat == "condo_hoa":       score += 5
     if cat == "dissolution":     score += 10
     if cat == "probate_estate":  score += 12
 
-    # Value tier bonuses
     if "RES3" in ct or "$250,000 OR MORE" in ct: score += 10
     if "RES2" in ct or "$50,001" in ct:           score += 5
 
-    # Name flags
     if "ESTATE OF" in n:         score += 10
     if "TRUST" in n and "BANK" not in n: score += 3
     if "LLC" in n or " INC" in n: score -= 5
 
-    # Recency bonus
     if date_str and date_str != "—":
         for fmt in ["%m/%d/%Y %H:%M", "%Y-%m-%d", "%m/%d/%Y", "%B %d, %Y"]:
             try:
@@ -258,6 +214,8 @@ def run_pinellas():
 
 def load_all_leads():
     all_leads = []
+    today_str = datetime.now().strftime("%Y-%m-%d")
+
     for county_key, county in config.COUNTIES.items():
         if not county["active"]:
             continue
@@ -280,16 +238,19 @@ def load_all_leads():
             tab_count = 0
 
             for row in rows[1:]:
-                rec       = {headers[i]: row[i]
-                             for i in range(min(len(headers), len(row)))}
-                # For probate: combine Decedent's First Name + Last Name columns
-                # Also extract petitioner name (the person to call)
+                rec = {headers[i]: row[i]
+                       for i in range(min(len(headers), len(row)))}
+
+                # Skip junk rows: must have a non-empty Case # or Style
+                case_check = rec.get("Case #", "").strip() or rec.get("Case Number", "").strip()
+                style_check = rec.get("Style", "").strip()
+                if not case_check and not style_check:
+                    continue
+
+                # ── Probate: combine Decedent first+last, extract petitioner ──
                 if sig_key == "probate":
-                    first      = ""
-                    last       = ""
-                    pet_first  = ""
-                    pet_middle = ""
-                    pet_last   = ""
+                    first = pet_first = pet_middle = pet_last = ""
+                    last  = ""
                     for k, v in rec.items():
                         ku = k.upper().strip()
                         vs = str(v).strip()
@@ -323,15 +284,15 @@ def load_all_leads():
                 else:
                     raw_name        = get_col(rec, col_map["name"])
                     petitioner_name = ""
+
                 case_num  = get_col(rec, col_map["case"])
                 date_val  = get_col(rec, col_map["date"])
                 case_type = get_col(rec, col_map["case_type"])
                 address   = get_col(rec, col_map["address"])
                 amount    = get_col(rec, col_map.get("amount", ["Amount"]))
-                # For mech liens / judgments: show filer as secondary info
                 filer_name = get_col(rec, col_map.get("filed_by_col", [])) if col_map.get("filed_by_col") else ""
 
-                # Name extraction based on signal type
+                # Name extraction
                 if name_type == "defendant" and " VS. " in raw_name.upper():
                     display_name, filed_by = extract_defendant(raw_name)
                 elif name_type == "plaintiff" and " VS. " in raw_name.upper():
@@ -339,7 +300,7 @@ def load_all_leads():
                 else:
                     display_name, filed_by = raw_name, ""
 
-                # Clean probate names: strip "IN RE: THE ESTATE OF " prefix
+                # Strip probate prefix
                 if sig_key == "probate" and display_name:
                     for prefix in ["IN RE: THE ESTATE OF ",
                                    "IN RE: ESTATE OF ",
@@ -349,10 +310,10 @@ def load_all_leads():
                             display_name = display_name[len(prefix):].strip()
                             break
 
-                # Clean and normalize date to YYYY-MM-DD for correct sorting
-                raw_date = (date_val.split(" ")[0]
-                            if date_val and " " in date_val else date_val)
-                clean_date = raw_date
+                # ── Normalize date to YYYY-MM-DD ──
+                # date_val may be "5/20/2026 4:52:06 PM" or "2026-05-20" etc.
+                raw_date = date_val.split(" ")[0] if date_val and date_val != "—" else ""
+                clean_date = ""
                 if raw_date:
                     for fmt in ("%m/%d/%Y", "%Y-%m-%d", "%m-%d-%Y", "%Y/%m/%d"):
                         try:
@@ -360,15 +321,17 @@ def load_all_leads():
                             break
                         except ValueError:
                             continue
+                if not clean_date:
+                    clean_date = "—"
 
-                # Score and classify
-                score   = score_lead(sig_key, case_type, display_name, date_val)
-                heat    = ("hot"  if score >= config.HOT_LEAD_THRESHOLD else
-                           "warm" if score >= 40 else "cold")
-                cat     = classify_case_type(case_type)
+                # ── Flag records added today ──
+                added_today = (clean_date == today_str)
 
-                # For probate: filed_by = petitioner
-                # For mech liens/judgments: filed_by = contractor/creditor
+                score = score_lead(sig_key, case_type, display_name, date_val)
+                heat  = ("hot"  if score >= config.HOT_LEAD_THRESHOLD else
+                         "warm" if score >= 40 else "cold")
+                cat   = classify_case_type(case_type)
+
                 if sig_key == "probate" and petitioner_name:
                     final_filed_by = petitioner_name[:60]
                 elif sig_key in ("mechanic_liens", "judgments") and filer_name:
@@ -377,25 +340,26 @@ def load_all_leads():
                     final_filed_by = filed_by[:60]
 
                 all_leads.append({
-                    "signal":        sig_key,
-                    "label":         label,
-                    "color":         color,
-                    "name":          display_name[:80],
-                    "filed_by":      final_filed_by,
-                    "petitioner":    petitioner_name[:60] if sig_key == "probate" else "",
-                    "case":          case_num[:40],
-                    "address":       address[:80],
-                    "date":          clean_date[:15],
-                    "case_type":     case_type[:80],
-                    "category":      cat,
-                    "amount":        amount[:25],
-                    "score":         score,
-                    "heat":          heat,
-                    "county":        county_name,
-                    "stacked":       False,
-                    "stack_count":   1,
+                    "signal":      sig_key,
+                    "label":       label,
+                    "color":       color,
+                    "name":        display_name[:80],
+                    "filed_by":    final_filed_by,
+                    "petitioner":  petitioner_name[:60] if sig_key == "probate" else "",
+                    "case":        case_num[:40],
+                    "address":     address[:80],
+                    "date":        clean_date[:10],
+                    "case_type":   case_type[:80],
+                    "category":    cat,
+                    "amount":      amount[:25],
+                    "score":       score,
+                    "heat":        heat,
+                    "county":      county_name,
+                    "added_today": added_today,
+                    "stacked":     False,
+                    "stack_count": 1,
                     "stack_signals": [label],
-                    "stack_label":   "",
+                    "stack_label": "",
                 })
                 tab_count += 1
 
@@ -462,7 +426,7 @@ def send_email(county_results, total_new, elapsed,
     for county_key, results in county_results.items():
         lines.append("── " + config.COUNTIES[county_key]["name"] + " ──")
         for sig, count in results.items():
-            lines.append("  " + config.SIGNAL_LABELS.get(sig,sig).ljust(15) +
+            lines.append("  " + config.SIGNAL_LABELS.get(sig, sig).ljust(15) +
                          str(count))
         lines.append("")
     lines.append("Dashboard: https://rehabtampabay.github.io/pinellas-intel")
