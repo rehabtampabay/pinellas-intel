@@ -188,7 +188,7 @@ def score_lead(sig_key, case_type, name, date_str):
     if "RES2" in ct or "$50,001" in ct:           score += 5
 
     # Name flags
-    if "ESTATE OF" in n:                          score += 10
+    # ESTATE OF bonus removed — name stripping now gives clean names, bonus was an artifact
     if "TRUST" in n and "BANK" not in n:          score += 3
     if "LLC" in n or " INC" in n:                 score -= 5
 
@@ -416,7 +416,7 @@ def load_all_leads():
                 tab_count += 1
 
             print(f"  {tab_name}: {tab_count} records")
-            time.sleep(1)  # avoid Google Sheets API rate limit (60 reads/min)
+            time.sleep(5)  # avoid Google Sheets API rate limit (60 reads/min)
 
     print("\nDetecting signal stacking...")
     all_leads = detect_stacks(all_leads)
