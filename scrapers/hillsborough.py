@@ -27,6 +27,7 @@ import csv
 import io
 import os
 import sys
+import time
 from datetime import datetime, timedelta
 
 import requests
@@ -445,6 +446,7 @@ def scrape_hillsborough():
             if written:
                 print(f"    {d}: +{written}")
         results[sig_key] = total
+        time.sleep(5)  # avoid Google Sheets rate limit
         print(f"  {tab_name}: {total} new")
 
     # ── Probate ────────────────────────────────────────────────────────────────
