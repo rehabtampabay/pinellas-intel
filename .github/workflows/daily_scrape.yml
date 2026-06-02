@@ -1,41 +1,33 @@
-name: 🏠 Pinellas Intel — Daily Scrape
-
+name: 🏠 FL Property Intel — Daily Scrape
 on:
   schedule:
     - cron: '0 14 * * 1-5'
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
   scrape:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Install dependencies
         run: pip install -r requirements.txt
-
       - name: Write Google credentials from secret
         run: echo '${{ secrets.GOOGLE_CREDENTIALS }}' > google_credentials.json
-
       - name: Run all scrapers
         env:
           GHL_API_KEY: ${{ secrets.GHL_API_KEY }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: python run_all.py
-
       - name: Commit updated dashboard data
         run: |
-          git config --global user.name  "pinellas-intel-bot"
-          git config --global user.email "bot@pinellas-intel.local"
+          git config --global user.name  "fl-intel-bot"
+          git config --global user.email "bot@fl-intel.local"
           git add data/
           git diff --staged --quiet || (
             git commit -m "📊 Auto-update: $(date +'%Y-%m-%d %H:%M UTC')"
