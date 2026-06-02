@@ -1,5 +1,5 @@
 {
-  "updated": "2026-06-02 19:33 UTC",
+  "updated": "2026-06-02 19:41 UTC",
   "total_new": 0,
   "total_records": 3400,
   "hot_count": 634,
@@ -40265,8 +40265,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "EVICTION",
-        "MECH LIEN"
+        "MECH LIEN",
+        "EVICTION"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -43508,8 +43508,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "EVICTION",
-        "MECH LIEN"
+        "MECH LIEN",
+        "EVICTION"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -43557,8 +43557,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "EVICTION",
-        "MECH LIEN"
+        "MECH LIEN",
+        "EVICTION"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -43606,8 +43606,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "EVICTION",
-        "MECH LIEN"
+        "MECH LIEN",
+        "EVICTION"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -43631,8 +43631,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "EVICTION",
-        "MECH LIEN"
+        "MECH LIEN",
+        "EVICTION"
       ],
       "stack_label": "STACKED 2x"
     },
