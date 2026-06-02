@@ -1,6 +1,6 @@
 {
-  "updated": "2026-06-02 13:53 UTC",
-  "total_new": 31,
+  "updated": "2026-06-02 19:30 UTC",
+  "total_new": 0,
   "total_records": 3400,
   "hot_count": 634,
   "stacked_count": 12,
@@ -12,7 +12,7 @@
   "by_county": {
     "Pinellas": {
       "total": 3400,
-      "new_today": 31,
+      "new_today": 0,
       "stacked": 12,
       "breakdown": {
         "lis_pendens": 334,
@@ -60,8 +60,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "LIS PENDENS",
-        "PROBATE"
+        "PROBATE",
+        "LIS PENDENS"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -85,8 +85,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "LIS PENDENS",
-        "PROBATE"
+        "PROBATE",
+        "LIS PENDENS"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -110,8 +110,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "LIS PENDENS",
-        "PROBATE"
+        "PROBATE",
+        "LIS PENDENS"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -135,8 +135,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "EVICTION",
-        "PROBATE"
+        "PROBATE",
+        "EVICTION"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -160,8 +160,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "EVICTION",
-        "PROBATE"
+        "PROBATE",
+        "EVICTION"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -40265,8 +40265,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "MECH LIEN",
-        "EVICTION"
+        "EVICTION",
+        "MECH LIEN"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -40986,8 +40986,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "EVICTION",
-        "PROBATE"
+        "PROBATE",
+        "EVICTION"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -41011,8 +41011,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "EVICTION",
-        "PROBATE"
+        "PROBATE",
+        "EVICTION"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -43508,8 +43508,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "MECH LIEN",
-        "EVICTION"
+        "EVICTION",
+        "MECH LIEN"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -43557,8 +43557,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "MECH LIEN",
-        "EVICTION"
+        "EVICTION",
+        "MECH LIEN"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -43606,8 +43606,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "MECH LIEN",
-        "EVICTION"
+        "EVICTION",
+        "MECH LIEN"
       ],
       "stack_label": "STACKED 2x"
     },
@@ -43631,8 +43631,8 @@
       "stacked": true,
       "stack_count": 2,
       "stack_signals": [
-        "MECH LIEN",
-        "EVICTION"
+        "EVICTION",
+        "MECH LIEN"
       ],
       "stack_label": "STACKED 2x"
     },
