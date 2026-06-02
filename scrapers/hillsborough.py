@@ -303,7 +303,8 @@ def scrape_hillsborough():
             parsed  = parser_fn(rows, existing) if rows else []
             all_new.extend(parsed)
 
-        # ONE write for all dates combined
+        # Ensure header row exists, then write data
+        ensure_header(sheet_id, tab_name, sig_key)
         written = 0
         if all_new:
             header = SHEET_HEADERS[sig_key]
@@ -334,6 +335,7 @@ def scrape_hillsborough():
         parsed = parse_probate(rows, existing) if rows else []
         all_new.extend(parsed)
 
+    ensure_header(sheet_id, tab_name, "probate")
     written = 0
     if all_new:
         header = SHEET_HEADERS["probate"]
@@ -355,3 +357,17 @@ def scrape_hillsborough():
     results["surplus_funds"]  = 0
 
     return results
+
+
+def ensure_header(sheet_id, tab_name, sig_key):
+    """Write header row if the tab is empty or has NO_HEADER columns."""
+    try:
+        time.sleep(2)
+        rows = sheets_helper.read_all_rows(sheet_id, tab_name)
+        header = SHEET_HEADERS.get(sig_key, [])
+        if not rows or not rows[0] or rows[0][0].startswith("NO_HEADER") or rows[0][0] == "":
+            ws = sheets_helper.open_sheet(sheet_id, tab_name)
+            ws.insert_row(header, index=1)
+            print(f"    wrote header to {tab_name}")
+    except Exception as e:
+        print(f"    header check failed ({tab_name}): {e}")
