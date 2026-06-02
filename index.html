@@ -622,10 +622,12 @@ function openDetail(idx) {
   const color = COLORS[l.signal] || '#64748b';
   const hcls  = 'heat-' + (l.heat || 'cold');
   const htxt  = l.heat==='hot' ? '🔥 HOT' : l.heat==='warm' ? '⚡ WARM' : '❄️ COLD';
-  const clerkUrl = l.case && l.case !== '—'
-    ? `https://courtrecords.mypinellasclerk.gov/MyCr/CaseSearch?CaseNumber=${encodeURIComponent(l.case)}`
-    : 'https://courtrecords.mypinellasclerk.gov/MyCr/';
-  const pcpaoUrl = `https://www.pcpao.org/general-search#ownerName=${encodeURIComponent(l.defendant || l.name || '')}`;
+  // Owner name for lookups: "LAST, FIRST" format preferred for PCPAO
+  const ownerRaw   = l.signal==='probate' ? (l.name||'') : (l.defendant||l.name||'');
+  const ownerClean = ownerRaw.replace(/'/g,"'").replace(/"/g,'"').substring(0,60);
+  // TruePeopleSearch supports ?name= URL param directly
+  const tpsUrl     = `https://www.truepeoplesearch.com/results?name=${encodeURIComponent(ownerRaw)}`;
+  const caseNum    = (l.case && l.case !== '—') ? l.case : '';
 
   document.getElementById('dp-content').innerHTML = `
     <div class="dp-signal" style="color:${color}">● ${l.label||'LEAD'}</div>
@@ -658,15 +660,38 @@ function openDetail(idx) {
     </div>
     <div class="dp-section">
       <div class="dp-section-title">Quick Actions</div>
-      <a href="${clerkUrl}" target="_blank" style="display:block;width:100%;margin-bottom:8px;padding:9px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;text-decoration:none;text-align:center;letter-spacing:.05em;">
-        🏛️ VIEW COURT RECORD ↗
-      </a>
-      <a href="${pcpaoUrl}" target="_blank" style="display:block;width:100%;margin-bottom:8px;padding:9px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;text-decoration:none;text-align:center;letter-spacing:.05em;">
-        🏠 LOOKUP PROPERTY (PCPAO) ↗
-      </a>
-      <button class="skip-btn" onclick="copyToClipboard('${(l.defendant||l.name||'').replace(/'/g,'').replace(/"/g,'').substring(0,50)}')">
-        📋 COPY NAME FOR SKIP TRACE
+
+      <!-- COURT RECORDS: copies case # then opens clerk search -->
+      ${caseNum
+        ? `<button onclick="copyAndOpen('${caseNum.replace(/'/g,"\\'")}','https://courtrecords.mypinellasclerk.gov/MyCr/Cases/Search?s=e')"
+            style="display:block;width:100%;margin-bottom:4px;padding:10px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-align:center;letter-spacing:.05em;">
+            🏛️ COURT RECORDS — COPY &amp; OPEN
+          </button>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-bottom:12px;">
+            Copies case # <strong style="color:var(--text)">${caseNum}</strong> → paste in Case # field
+          </div>`
+        : `<div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:12px;padding:8px;border:1px solid var(--border);border-radius:5px;">
+            🏛️ No case # available for court lookup
+           </div>`
+      }
+
+      <!-- PCPAO: copies owner name then opens property search -->
+      <button onclick="copyAndOpen('${ownerClean.replace(/'/g,"\\'")}','https://www.pcpao.gov/quick-search?qu=1')"
+        style="display:block;width:100%;margin-bottom:4px;padding:10px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-align:center;letter-spacing:.05em;">
+        🏠 PROPERTY APPRAISER — COPY &amp; OPEN
       </button>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-bottom:12px;">
+        Copies <strong style="color:var(--text)">${ownerClean.substring(0,35)}${ownerClean.length>35?'...':''}</strong> → paste in Owner field
+      </div>
+
+      <!-- SKIP TRACE: opens TruePeopleSearch with name pre-filled in URL -->
+      <a href="${tpsUrl}" target="_blank"
+        style="display:block;width:100%;margin-bottom:4px;padding:10px;border-radius:7px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);color:var(--accent);font-family:var(--mono);font-size:10px;text-decoration:none;text-align:center;letter-spacing:.05em;">
+        🔍 SKIP TRACE — SEARCH OPENS DIRECT ↗
+      </a>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-bottom:0;">
+        Opens TruePeopleSearch for <strong style="color:var(--text)">${ownerClean.substring(0,35)}${ownerClean.length>35?'...':''}</strong>
+      </div>
     </div>
   `;
   document.getElementById('detail-overlay').style.display = 'block';
@@ -678,6 +703,12 @@ function closeDetail(e) {
 }
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text).then(()=>{ alert('Copied: ' + text); });
+}
+// Copies text to clipboard AND opens a URL in a new tab simultaneously.
+// The VA pastes the copied value into the search field on the opened page.
+function copyAndOpen(text, url) {
+  navigator.clipboard.writeText(text).catch(()=>{});
+  window.open(url, '_blank');
 }
 function switchTab(id, el) {
   document.getElementById('tab-feed').style.display    = id==='feed'    ? '' : 'none';
