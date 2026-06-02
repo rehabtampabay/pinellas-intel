@@ -13,16 +13,20 @@ ALERT_EMAIL    = "info@rehabtampabay.com"
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "")
 
 # ── Scoring thresholds ────────────────────────────────────────────────────────
-HOT_LEAD_THRESHOLD = 60   # score >= 60 → hot
-WARM_THRESHOLD     = 40   # score >= 40 → warm
+HOT_LEAD_THRESHOLD = 60
+WARM_THRESHOLD     = 40
 
 # ── Signal base scores ────────────────────────────────────────────────────────
+# Calibrated so that:
+#   - Recent (<=30 days) probate / lis pendens = HOT
+#   - Old (>90 days) records score WARM at best (no recency bonus)
+#   - Evictions / mechanic liens only hit HOT with strong recency
 SIGNAL_SCORES = {
-    "lis_pendens":    35,
-    "probate":        30,
+    "lis_pendens":    40,
+    "probate":        45,
     "evictions":      25,
     "mechanic_liens": 20,
-    "judgments":      20,
+    "judgments":      25,
     "tax_deeds":      40,
     "surplus_funds":  30,
 }
@@ -50,7 +54,6 @@ SIGNAL_COLORS = {
 }
 
 # ── Sheet tab names (same for all counties) ───────────────────────────────────
-# Each county's Google Sheet uses identical tab names.
 TABS = {
     "lis_pendens":    "Lis Pendens Raw",
     "probate":        "Probate Raw",
@@ -63,16 +66,12 @@ TABS = {
 }
 
 # ── Counties ──────────────────────────────────────────────────────────────────
-# To add a new county:
-#   1. Create a Google Sheet with the tab names above
-#   2. Add an entry here with active=True and the sheet_id
-#   3. Add the corresponding scraper in run_all.py
 COUNTIES = {
     "pinellas": {
         "active":      True,
         "name":        "Pinellas",
         "sheet_id":    "1fulzCWt9YM8IgniHyjHCmfglfkmW9lSVcKbnSrwh0pY",
-        "public_base": "https://publicfiles.mypinellasclerk.gov",
+        "public_base": "https://publicfiles.mypinellasclerk.gov/download",
     },
     "hillsborough": {
         "active":   True,
@@ -82,6 +81,6 @@ COUNTIES = {
     "pasco": {
         "active":   False,
         "name":     "Pasco",
-        "sheet_id": "",   # fill in when ready
+        "sheet_id": "",
     },
 }
