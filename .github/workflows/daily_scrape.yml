@@ -1,7 +1,7 @@
 name: 🏠 FL Property Intel — Daily Scrape
 on:
   schedule:
-    - cron: '0 14 * * 1-5'
+    - cron: '0 18 * * 1-5'   # 6pm UTC = 2pm EDT — after courts post daily files
   workflow_dispatch:
 permissions:
   contents: write
