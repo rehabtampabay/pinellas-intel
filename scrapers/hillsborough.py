@@ -121,7 +121,9 @@ def fetch_csv(url):
         content = r.content.decode("utf-8", errors="replace")
         if len(content) < MIN_FILE_BYTES:
             return []
-        reader = csv.DictReader(io.StringIO(content), delimiter="\t")
+        if content.startswith("\xef\xbb\xbf"): content = content[3:]
+        if content.startswith("\ufeff"): content = content[1:]
+        reader = csv.DictReader(io.StringIO(content))
         return list(reader)
     except Exception as e:
         print(f"    fetch failed: {e}")
