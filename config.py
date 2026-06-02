@@ -66,9 +66,10 @@ TABS = {
 #   3. Add the corresponding scraper in run_all.py
 COUNTIES = {
     "pinellas": {
-        "active":   True,
-        "name":     "Pinellas",
-        "sheet_id": "1fulzCWt9YM8IgniHyjHCmfglfkmW9lSVcKbnSrwh0pY",
+        "active":      True,
+        "name":        "Pinellas",
+        "sheet_id":    "1fulzCWt9YM8IgniHyjHCmfglfkmW9lSVcKbnSrwh0pY",
+        "public_base": "https://publicfiles.mypinellasclerk.gov",
     },
     "hillsborough": {
         "active":   True,
