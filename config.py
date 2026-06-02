@@ -5,6 +5,9 @@
 
 import os
 
+# ── Google credentials ────────────────────────────────────────────────────────
+GOOGLE_CREDENTIALS_FILE = "google_credentials.json"
+
 # ── Email ─────────────────────────────────────────────────────────────────────
 ALERT_EMAIL    = "info@rehabtampabay.com"
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "")
