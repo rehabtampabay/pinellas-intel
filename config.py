@@ -22,8 +22,8 @@ WARM_THRESHOLD     = 40
 #   - Old (>90 days) records score WARM at best (no recency bonus)
 #   - Evictions / mechanic liens only hit HOT with strong recency
 SIGNAL_SCORES = {
-    "lis_pendens":    40,
-    "probate":        45,
+    "lis_pendens":    38,
+    "probate":        35,
     "evictions":      25,
     "mechanic_liens": 20,
     "judgments":      25,
