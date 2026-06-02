@@ -1,23 +1,53 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# config.py  —  FL Property Intel
+# Central configuration for all counties, signals, and scoring.
+# ─────────────────────────────────────────────────────────────────────────────
+
 import os
 
-# ================================================================
-# FL PROPERTY INTEL — MASTER CONFIG
-# One place to control everything. Do not duplicate settings
-# elsewhere in the codebase.
-# ================================================================
-
-# ── Google Service Account ───────────────────────────────────────
-GOOGLE_CREDENTIALS_FILE = "google_credentials.json"
-
-# ── Email Alerts ─────────────────────────────────────────────────
+# ── Email ─────────────────────────────────────────────────────────────────────
 ALERT_EMAIL    = "info@rehabtampabay.com"
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "")
 
-# ── GoHighLevel ──────────────────────────────────────────────────
-GHL_API_KEY  = os.environ.get("GHL_API_KEY", "")
-GHL_BASE_URL = "https://rest.gohighlevel.com/v1"
+# ── Scoring thresholds ────────────────────────────────────────────────────────
+HOT_LEAD_THRESHOLD = 60   # score >= 60 → hot
+WARM_THRESHOLD     = 40   # score >= 40 → warm
 
-# ── Sheet Tab Names (uniform across ALL county spreadsheets) ─────
+# ── Signal base scores ────────────────────────────────────────────────────────
+SIGNAL_SCORES = {
+    "lis_pendens":    35,
+    "probate":        30,
+    "evictions":      25,
+    "mechanic_liens": 20,
+    "judgments":      20,
+    "tax_deeds":      40,
+    "surplus_funds":  30,
+}
+
+# ── Signal display labels ─────────────────────────────────────────────────────
+SIGNAL_LABELS = {
+    "lis_pendens":    "LIS PENDENS",
+    "probate":        "PROBATE",
+    "evictions":      "EVICTION",
+    "mechanic_liens": "MECH LIEN",
+    "judgments":      "JUDGMENT",
+    "tax_deeds":      "TAX DEED",
+    "surplus_funds":  "SURPLUS",
+}
+
+# ── Signal dashboard colors ───────────────────────────────────────────────────
+SIGNAL_COLORS = {
+    "lis_pendens":    "#ef4444",
+    "probate":        "#a78bfa",
+    "evictions":      "#f59e0b",
+    "mechanic_liens": "#f97316",
+    "judgments":      "#14b8a6",
+    "tax_deeds":      "#22c55e",
+    "surplus_funds":  "#3b82f6",
+}
+
+# ── Sheet tab names (same for all counties) ───────────────────────────────────
+# Each county's Google Sheet uses identical tab names.
 TABS = {
     "lis_pendens":    "Lis Pendens Raw",
     "probate":        "Probate Raw",
@@ -29,51 +59,25 @@ TABS = {
     "dashboard":      "Master Dashboard",
 }
 
-# ── County Spreadsheets ──────────────────────────────────────────
+# ── Counties ──────────────────────────────────────────────────────────────────
+# To add a new county:
+#   1. Create a Google Sheet with the tab names above
+#   2. Add an entry here with active=True and the sheet_id
+#   3. Add the corresponding scraper in run_all.py
 COUNTIES = {
     "pinellas": {
-        "name":        "Pinellas",
-        "sheet_id":    "1fulzCWt9YM8IgniHyjHCmfglfkmW9lSVcKbnSrwh0pY",
-        "public_base": "https://publicfiles.mypinellasclerk.gov/download",
-        "active":      True,
+        "active":   True,
+        "name":     "Pinellas",
+        "sheet_id": "1fulzCWt9YM8IgniHyjHCmfglfkmW9lSVcKbnSrwh0pY",
     },
     "hillsborough": {
-        "name":        "Hillsborough",
-        "sheet_id":    "19XN6nWbxO7REtgneXE-ZIhdsa9H5GAmzG7SLubLJ4tY",
-        "public_base": "https://publicfiles.hillsclerk.com/download",
-        "active":      False,
+        "active":   True,
+        "name":     "Hillsborough",
+        "sheet_id": "19XN6nWbxO7REtgneXE-ZIhdsa9H5GAmzG7SLubLJ4tY",
+    },
+    "pasco": {
+        "active":   False,
+        "name":     "Pasco",
+        "sheet_id": "",   # fill in when ready
     },
 }
-
-# ── Lead Scoring ─────────────────────────────────────────────────
-SIGNAL_SCORES = {
-    "lis_pendens":    40,
-    "probate":        35,
-    "tax_deeds":      35,
-    "surplus_funds":  30,
-    "mechanic_liens": 20,
-    "judgments":      20,
-    "evictions":      15,
-}
-
-SIGNAL_LABELS = {
-    "lis_pendens":    "LIS PENDENS",
-    "probate":        "PROBATE",
-    "evictions":      "EVICTION",
-    "mechanic_liens": "MECH LIEN",
-    "judgments":      "JUDGMENT",
-    "tax_deeds":      "TAX DEED",
-    "surplus_funds":  "SURPLUS",
-}
-
-SIGNAL_COLORS = {
-    "lis_pendens":    "#ef4444",
-    "probate":        "#a78bfa",
-    "evictions":      "#f59e0b",
-    "mechanic_liens": "#f97316",
-    "judgments":      "#14b8a6",
-    "tax_deeds":      "#22c55e",
-    "surplus_funds":  "#06b6d4",
-}
-
-HOT_LEAD_THRESHOLD = 60
