@@ -250,13 +250,17 @@ tr:hover td{background:rgba(255,255,255,.02);}
     </div>
     <div class="sb-section">
       <div class="sb-label">COUNTIES</div>
-      <div class="fi active">
-        <div class="fl"><div class="dot" style="background:var(--green)"></div>Pinellas</div>
-        <span class="badge live">LIVE</span>
+      <div class="fi active" onclick="setFilter('county','all',this)">
+        <div class="fl"><div class="dot" style="background:var(--accent)"></div>All Counties</div>
+        <span class="badge" id="b-county-all">0</span>
       </div>
-      <div class="fi" style="opacity:.4">
-        <div class="fl"><div class="dot" style="background:var(--muted)"></div>Hillsborough</div>
-        <span class="badge soon">SOON</span>
+      <div class="fi" onclick="setFilter('county','Pinellas',this)">
+        <div class="fl"><div class="dot" style="background:var(--green)"></div>Pinellas</div>
+        <span class="badge live" id="b-county-pinellas">0</span>
+      </div>
+      <div class="fi" onclick="setFilter('county','Hillsborough',this)">
+        <div class="fl"><div class="dot" style="background:var(--warm)"></div>Hillsborough</div>
+        <span class="badge" id="b-county-hillsborough">0</span>
       </div>
       <div class="fi" style="opacity:.4">
         <div class="fl"><div class="dot" style="background:var(--muted)"></div>Pasco</div>
@@ -361,7 +365,7 @@ const COLORS   = {
 let allLeads=[], filtered=[], page=1;
 let sortField = 'date';   // DEFAULT: sort by date
 let sortAsc   = false;    // DEFAULT: descending (newest first)
-const filters = {signal:'all', heat:'all', casetype:'all'};
+const filters = {signal:'all', heat:'all', casetype:'all', county:'all'};
 let searchQ = '';
 
 // ── Normalize any date to YYYY-MM-DD for correct string sort ──
@@ -431,6 +435,10 @@ function render(data) {
   document.getElementById('b-mechanic_liens').textContent= allLeads.filter(l=>l.signal==='mechanic_liens').length;
   document.getElementById('b-judgments').textContent     = allLeads.filter(l=>l.signal==='judgments').length;
   document.getElementById('b-tax_deeds').textContent     = allLeads.filter(l=>l.signal==='tax_deeds').length;
+  // County badges
+  document.getElementById('b-county-all').textContent         = allLeads.length;
+  document.getElementById('b-county-pinellas').textContent    = allLeads.filter(l=>(l.county||'Pinellas')==='Pinellas').length;
+  document.getElementById('b-county-hillsborough').textContent= allLeads.filter(l=>l.county==='Hillsborough').length;
 
   // Metric cards
   const cards = [
@@ -522,6 +530,7 @@ function applyFilters() {
       if (filters.casetype === 'non-homestead' && !ct.includes('non-homestead')) return false;
       if (filters.casetype === 'condo'         && !ct.includes('condo'))         return false;
     }
+    if (filters.county !== 'all' && (l.county||'Pinellas') !== filters.county) return false;
     if (searchQ) {
       const hay = [l.name,l.defendant,l.plaintiff,l.case,l.case_type].join(' ').toLowerCase();
       if (!hay.includes(searchQ)) return false;
