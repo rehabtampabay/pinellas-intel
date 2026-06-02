@@ -9,7 +9,7 @@
 #   5. Send summary email
 # ─────────────────────────────────────────────────────────────────────────────
 
-import json, os, sys, smtplib, re
+import json, os, sys, smtplib, re, time
 from datetime import datetime
 from email.message import EmailMessage
 
@@ -290,10 +290,15 @@ def load_all_leads():
                 rec = {headers[i]: row[i]
                        for i in range(min(len(headers), len(row)))}
 
-                # Skip junk rows with no Case # and no Style
-                case_check  = rec.get("Case #", "").strip() or rec.get("Case Number", "").strip()
-                style_check = rec.get("Style", "").strip()
-                if not case_check and not style_check:
+                # Skip completely empty rows — check all possible ID columns
+                case_check = (
+                    rec.get("Case #", "").strip() or
+                    rec.get("Case Number", "").strip() or
+                    rec.get("Instrument", "").strip() or
+                    rec.get("Style", "").strip() or
+                    rec.get("Title", "").strip()
+                )
+                if not case_check:
                     continue
 
                 # ── Probate: combine Decedent first+last, extract petitioner ──
@@ -411,6 +416,7 @@ def load_all_leads():
                 tab_count += 1
 
             print(f"  {tab_name}: {tab_count} records")
+            time.sleep(1)  # avoid Google Sheets API rate limit (60 reads/min)
 
     print("\nDetecting signal stacking...")
     all_leads = detect_stacks(all_leads)
