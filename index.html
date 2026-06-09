@@ -637,6 +637,14 @@ function openDetail(idx) {
   // TruePeopleSearch supports ?name= URL param directly
   const tpsUrl     = `https://www.truepeoplesearch.com/results?name=${encodeURIComponent(ownerRaw)}`;
   const caseNum    = (l.case && l.case !== '—') ? l.case : '';
+  const isHill     = (l.county || 'Pinellas') === 'Hillsborough';
+  const clerkUrl   = isHill
+    ? 'https://pubrec.hillsclerk.com/oncore/search.aspx'
+    : 'https://courtrecords.mypinellasclerk.gov/MyCr/Cases/Search?s=e';
+  const paUrl      = isHill
+    ? 'https://www.hcpafl.org/Property-Search'
+    : 'https://www.pcpao.gov/quick-search?qu=1';
+  const paLabel    = isHill ? 'HCPA' : 'PCPAO';
 
   document.getElementById('dp-content').innerHTML = `
     <div class="dp-signal" style="color:${color}">● ${l.label||'LEAD'}</div>
@@ -672,7 +680,7 @@ function openDetail(idx) {
 
       <!-- COURT RECORDS: copies case # then opens clerk search -->
       ${caseNum
-        ? `<button onclick="copyAndOpen('${caseNum.replace(/'/g,"\\'")}','https://courtrecords.mypinellasclerk.gov/MyCr/Cases/Search?s=e')"
+        ? `<button onclick="copyAndOpen('${caseNum.replace(/'/g,"\\'")}','${clerkUrl}')"
             style="display:block;width:100%;margin-bottom:4px;padding:10px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-align:center;letter-spacing:.05em;">
             🏛️ COURT RECORDS — COPY &amp; OPEN
           </button>
@@ -685,9 +693,9 @@ function openDetail(idx) {
       }
 
       <!-- PCPAO: copies owner name then opens property search -->
-      <button onclick="copyAndOpen('${ownerClean.replace(/'/g,"\\'")}','https://www.pcpao.gov/quick-search?qu=1')"
+      <button onclick="copyAndOpen('${ownerClean.replace(/'/g,"\\'")}','${paUrl}')"
         style="display:block;width:100%;margin-bottom:4px;padding:10px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-align:center;letter-spacing:.05em;">
-        🏠 PROPERTY APPRAISER — COPY &amp; OPEN
+        🏠 ${paLabel} — COPY &amp; OPEN
       </button>
       <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-bottom:12px;">
         Copies <strong style="color:var(--text)">${ownerClean.substring(0,35)}${ownerClean.length>35?'...':''}</strong> → paste in Owner field
