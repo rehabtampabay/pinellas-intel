@@ -400,7 +400,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
   </main>
 </div>
 <script>
-const DATA_URL = 'https://rehabtampabay.github.io/pinellas-intel/data/leads.json';
+const DATA_URL      = 'https://rehabtampabay.github.io/pinellas-intel/data/leads.json';
+// ↓ Paste your Apps Script web app deployment URL here after deploying Code.gs
+const STATUS_API_URL = '';
 const PER_PAGE = 50;
 const COLORS   = {
   lis_pendens:'#ef4444',probate:'#a78bfa',evictions:'#f59e0b',
@@ -442,8 +444,11 @@ function extractDefendant(name) {
 // ── Load ──
 async function loadData() {
   try {
-    const r    = await fetch(DATA_URL + '?t=' + Date.now());
-    const data = await r.json();
+    const [leadsResp] = await Promise.all([
+      fetch(DATA_URL + '?t=' + Date.now()),
+      loadStatuses(),
+    ]);
+    const data = await leadsResp.json();
     render(data);
   } catch(e) {
     console.error('Failed to load leads.json:', e);
@@ -842,22 +847,60 @@ const STATUS_OPTS = [
   {val:'no_interest', label:'👎 Not Interested',    bg:'rgba(249,115,22,.15)', color:'#f97316'},
   {val:'bad_lead',    label:'🚫 Bad Lead',          bg:'rgba(220,38,38,.15)',  color:'#dc2626'},
 ];
+
+// In-memory status map shared across all VAs via Google Sheets
+let statusMap = {};
+
+async function loadStatuses() {
+  if (!STATUS_API_URL) return;
+  try {
+    const r    = await fetch(STATUS_API_URL + '?action=read&t=' + Date.now());
+    const data = await r.json();
+    statusMap  = {};
+    (data.statuses || []).forEach(s => { if (s.case_id) statusMap[s.case_id] = s; });
+  } catch(e) {
+    console.warn('Could not load statuses from Sheets:', e);
+  }
+}
+
 function getStatus(caseId) {
   if (!caseId || caseId === '—') return null;
-  try { return JSON.parse(localStorage.getItem('pi_st_' + caseId) || 'null'); } catch { return null; }
+  const s = statusMap[caseId];
+  if (!s || !s.status) return null;
+  return { val: s.status, who: s.who, note: s.note, ts: s.timestamp };
 }
-function saveStatus(caseId, selEl, whoEl, noteEl) {
-  const val  = selEl.value;
-  const who  = whoEl.value.trim();
-  const note = noteEl.value.trim();
+
+async function saveStatus(caseId, selEl, whoEl, noteEl) {
+  const val    = selEl.value;
+  const who    = whoEl.value.trim();
+  const note   = noteEl.value.trim();
+  const county = statusMap[caseId]?.county || '';
+
+  // Remember VA name per-device (not sensitive, just a convenience)
   if (who) localStorage.setItem('pi_who', who);
-  if (!val) {
-    localStorage.removeItem('pi_st_' + caseId);
-  } else {
-    localStorage.setItem('pi_st_' + caseId, JSON.stringify({val, who, note, ts: new Date().toISOString()}));
-  }
+
   const msg = document.getElementById('st-saved-msg');
-  if (msg) { msg.textContent = val ? '✓ Status saved' : '✓ Status cleared'; setTimeout(()=>{ if(msg) msg.textContent=''; },2000); }
+  if (msg) msg.textContent = '⏳ Saving...';
+
+  if (!STATUS_API_URL) {
+    if (msg) { msg.textContent = '⚠️ STATUS_API_URL not set'; setTimeout(()=>{ if(msg) msg.textContent=''; },3000); }
+    return;
+  }
+
+  try {
+    const params = new URLSearchParams({ action:'write', case_id:caseId, status:val, who, note, county });
+    await fetch(STATUS_API_URL + '?' + params);
+    // Update local map immediately so UI reflects change without a full reload
+    if (!val) {
+      delete statusMap[caseId];
+    } else {
+      statusMap[caseId] = { case_id:caseId, status:val, who, note, timestamp: new Date().toLocaleString(), county };
+    }
+    if (msg) { msg.textContent = val ? '✓ Saved to Sheets' : '✓ Cleared'; setTimeout(()=>{ if(msg) msg.textContent=''; },2000); }
+  } catch(e) {
+    if (msg) { msg.textContent = '❌ Save failed — check API URL'; setTimeout(()=>{ if(msg) msg.textContent=''; },3000); }
+    console.error('saveStatus error:', e);
+  }
   renderTable();
 }
 
