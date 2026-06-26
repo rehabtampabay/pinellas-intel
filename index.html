@@ -151,6 +151,10 @@ tr:hover td{background:rgba(255,255,255,.02);}
   background:var(--accent);border:none;color:#fff;font-family:var(--mono);
   font-size:11px;cursor:pointer;letter-spacing:.05em;transition:all .2s;}
 .skip-btn:hover{background:#2563eb;}
+/* STATUS BADGES */
+.st-badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:700;white-space:nowrap;letter-spacing:.03em;}
+/* GHL MODAL */
+#ghl-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;backdrop-filter:blur(4px);align-items:center;justify-content:center;}
 /* LOADING */
 #loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;
   align-items:center;justify-content:center;z-index:999;gap:14px;transition:opacity .4s;}
@@ -163,6 +167,16 @@ tr:hover td{background:rgba(255,255,255,.02);}
 </head>
 <body>
 <div id="loading"><div class="spinner"></div><p>LOADING INTEL...</p></div>
+<!-- GHL MODAL -->
+<div id="ghl-overlay" onclick="if(event.target===this)closeGHL()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;width:min(580px,95vw);height:min(720px,90vh);position:relative;display:flex;flex-direction:column;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <span style="font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--green)">📋 SUBMIT TO GHL CRM</span>
+      <button onclick="closeGHL()" style="background:var(--border);border:none;color:var(--text);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;">✕</button>
+    </div>
+    <iframe id="ghl-frame" src="" style="flex:1;border:none;border-radius:0 0 12px 12px;"></iframe>
+  </div>
+</div>
 <!-- DETAIL OVERLAY -->
 <div class="detail-overlay" id="detail-overlay" onclick="closeDetail(event)">
   <div class="detail-panel" id="detail-panel">
@@ -267,6 +281,39 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <span class="badge soon">SOON</span>
       </div>
     </div>
+    <div class="sb-section">
+      <div class="sb-label">STATUS</div>
+      <div class="fi active" onclick="setFilter('status','all',this)">
+        <div class="fl">All Statuses</div>
+      </div>
+      <div class="fi" onclick="setFilter('status','none',this)">
+        <div class="fl">⬜ Untouched</div>
+      </div>
+      <div class="fi" onclick="setFilter('status','submitted',this)">
+        <div class="fl">✅ Submitted to GHL</div>
+      </div>
+      <div class="fi" onclick="setFilter('status','called',this)">
+        <div class="fl">📞 Called</div>
+      </div>
+      <div class="fi" onclick="setFilter('status','attempted',this)">
+        <div class="fl">🔄 Attempted</div>
+      </div>
+      <div class="fi" onclick="setFilter('status','contacted',this)">
+        <div class="fl">✉️ Contacted</div>
+      </div>
+      <div class="fi" onclick="setFilter('status','dead',this)">
+        <div class="fl">💀 Dead</div>
+      </div>
+      <div class="fi" onclick="setFilter('status','cant_find',this)">
+        <div class="fl">🔍 Can't Find</div>
+      </div>
+      <div class="fi" onclick="setFilter('status','no_interest',this)">
+        <div class="fl">👎 Not Interested</div>
+      </div>
+      <div class="fi" onclick="setFilter('status','bad_lead',this)">
+        <div class="fl">🚫 Bad Lead</div>
+      </div>
+    </div>
   </aside>
   <!-- CONTENT -->
   <main class="content">
@@ -309,6 +356,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
               <th onclick="sortBy('score')" id="th-score">Score</th>
               <th>Heat</th>
               <th>County</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody id="leads-tbody"></tbody>
@@ -365,7 +413,7 @@ const COLORS   = {
 let allLeads=[], filtered=[], page=1;
 let sortField = 'date';   // DEFAULT: sort by date
 let sortAsc   = false;    // DEFAULT: descending (newest first)
-const filters = {signal:'all', heat:'all', casetype:'all', county:'all'};
+const filters = {signal:'all', heat:'all', casetype:'all', county:'all', status:'all'};
 let searchQ = '';
 
 // ── Normalize any date to YYYY-MM-DD for correct string sort ──
@@ -531,6 +579,11 @@ function applyFilters() {
       if (filters.casetype === 'condo'         && !ct.includes('condo'))         return false;
     }
     if (filters.county !== 'all' && (l.county||'Pinellas') !== filters.county) return false;
+    if (filters.status !== 'all') {
+      const s = getStatus(l.case);
+      if (filters.status === 'none' && s) return false;
+      if (filters.status !== 'none' && (!s || s.val !== filters.status)) return false;
+    }
     if (searchQ) {
       const hay = [l.name,l.defendant,l.plaintiff,l.case,l.case_type].join(' ').toLowerCase();
       if (!hay.includes(searchQ)) return false;
@@ -606,6 +659,7 @@ function renderTable() {
       </div></td>
       <td><span class="heat-badge ${hcls}">${htxt}</span></td>
       <td><span class="county-tag">${(l.county||'PINELLAS').toUpperCase()}</span></td>
+      <td>${(()=>{ const s=getStatus(l.case); if(!s) return '<span style="color:var(--muted);font-size:10px">—</span>'; const o=STATUS_OPTS.find(x=>x.val===s.val); return o?`<span class="st-badge" style="background:${o.bg};color:${o.color}">${o.label}</span>${s.who?`<div style="font-size:9px;color:var(--muted);margin-top:2px">${s.who}</div>`:''}`:'' })()} </td>
     </tr>`;
   }).join('');
 
@@ -639,12 +693,21 @@ function openDetail(idx) {
   const caseNum    = (l.case && l.case !== '—') ? l.case : '';
   const isHill     = (l.county || 'Pinellas') === 'Hillsborough';
   const clerkUrl   = isHill
-    ? 'https://publicaccess.hillsclerk.com/oripublicaccess/'
+    ? 'https://hover.hillsclerk.com/html/case/caseSearch.html'
     : 'https://courtrecords.mypinellasclerk.gov/MyCr/Cases/Search?s=e';
   const paUrl      = isHill
-    ? 'https://www.hcpafl.org/Property-Search'
+    ? 'https://gis.hcpafl.org/PropertySearch/#/nav/Basic%20Search'
     : 'https://www.pcpao.gov/quick-search?qu=1';
   const paLabel    = isHill ? 'HCPA' : 'PCPAO';
+  // Hillsborough clerk searches by party name; Pinellas by case #
+  const clerkCopy  = isHill ? ownerClean : caseNum;
+  const clerkHint  = isHill
+    ? `Copies <strong style="color:var(--text)">${ownerClean.substring(0,35)}${ownerClean.length>35?'...':''}</strong> → paste in Party Name field`
+    : `Copies case # <strong style="color:var(--text)">${caseNum}</strong> → paste in Case # field`;
+  // Current status
+  const curSt      = getStatus(l.case);
+  const curStOpt   = curSt ? STATUS_OPTS.find(x=>x.val===curSt.val) : null;
+  const savedWho   = localStorage.getItem('pi_who') || '';
 
   document.getElementById('dp-content').innerHTML = `
     <div class="dp-signal" style="color:${color}">● ${l.label||'LEAD'}</div>
@@ -678,21 +741,21 @@ function openDetail(idx) {
     <div class="dp-section">
       <div class="dp-section-title">Quick Actions</div>
 
-      <!-- COURT RECORDS: copies case # then opens clerk search -->
-      ${caseNum
-        ? `<button onclick="copyAndOpen('${caseNum.replace(/'/g,"\\'")}','${clerkUrl}')"
+      <!-- COURT RECORDS -->
+      ${clerkCopy
+        ? `<button onclick="copyAndOpen('${clerkCopy.replace(/'/g,"\\'")}','${clerkUrl}')"
             style="display:block;width:100%;margin-bottom:4px;padding:10px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-align:center;letter-spacing:.05em;">
             🏛️ COURT RECORDS — COPY &amp; OPEN
           </button>
           <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-bottom:12px;">
-            Copies case # <strong style="color:var(--text)">${caseNum}</strong> → paste in Case # field
+            ${clerkHint}
           </div>`
         : `<div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:12px;padding:8px;border:1px solid var(--border);border-radius:5px;">
-            🏛️ No case # available for court lookup
+            🏛️ No lookup info available for court search
            </div>`
       }
 
-      <!-- PCPAO: copies owner name then opens property search -->
+      <!-- PROPERTY APPRAISER -->
       <button onclick="copyAndOpen('${ownerClean.replace(/'/g,"\\'")}','${paUrl}')"
         style="display:block;width:100%;margin-bottom:4px;padding:10px;border-radius:7px;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;text-align:center;letter-spacing:.05em;">
         🏠 ${paLabel} — COPY &amp; OPEN
@@ -701,14 +764,48 @@ function openDetail(idx) {
         Copies <strong style="color:var(--text)">${ownerClean.substring(0,35)}${ownerClean.length>35?'...':''}</strong> → paste in Owner field
       </div>
 
-      <!-- SKIP TRACE: opens TruePeopleSearch with name pre-filled in URL -->
+      <!-- SKIP TRACE -->
       <a href="${tpsUrl}" target="_blank"
         style="display:block;width:100%;margin-bottom:4px;padding:10px;border-radius:7px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);color:var(--accent);font-family:var(--mono);font-size:10px;text-decoration:none;text-align:center;letter-spacing:.05em;">
         🔍 SKIP TRACE — SEARCH OPENS DIRECT ↗
       </a>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-bottom:0;">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-bottom:12px;">
         Opens TruePeopleSearch for <strong style="color:var(--text)">${ownerClean.substring(0,35)}${ownerClean.length>35?'...':''}</strong>
       </div>
+
+      <!-- GHL SUBMIT -->
+      <button onclick="openGHL('${l.case.replace(/'/g,"\\'")}','${ownerClean.replace(/'/g,"\\'")}','${(l.county||'Pinellas').replace(/'/g,"\\'")}')"
+        style="display:block;width:100%;margin-bottom:4px;padding:10px;border-radius:7px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:#22c55e;font-family:var(--mono);font-size:10px;cursor:pointer;text-align:center;letter-spacing:.05em;font-weight:700;">
+        📋 SUBMIT TO GHL CRM
+      </button>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-bottom:0;">
+        Opens GHL intake form in modal
+      </div>
+    </div>
+
+    <!-- STATUS TRACKING -->
+    <div class="dp-section">
+      <div class="dp-section-title">Lead Status</div>
+      ${curSt && curStOpt ? `
+        <div style="margin-bottom:10px;padding:8px 10px;border-radius:6px;background:${curStOpt.bg};border:1px solid ${curStOpt.color}40;">
+          <span style="font-family:var(--mono);font-size:10px;color:${curStOpt.color};font-weight:700">${curStOpt.label}</span>
+          ${curSt.who ? `<span style="font-size:10px;color:var(--muted);margin-left:8px">by ${curSt.who}</span>` : ''}
+          ${curSt.ts  ? `<div style="font-size:9px;color:var(--muted);margin-top:2px">${new Date(curSt.ts).toLocaleString()}</div>` : ''}
+          ${curSt.note ? `<div style="font-size:10px;color:var(--text);margin-top:4px;font-style:italic">"${curSt.note}"</div>` : ''}
+        </div>` : ''}
+      <select id="st-sel" style="width:100%;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;padding:7px 8px;border-radius:5px;margin-bottom:6px;outline:none;">
+        <option value="">— Set Status —</option>
+        ${STATUS_OPTS.map(o=>`<option value="${o.val}" ${curSt&&curSt.val===o.val?'selected':''}>${o.label}</option>`).join('')}
+      </select>
+      <input id="st-who" type="text" placeholder="Your name / VA initials" value="${savedWho}"
+        style="width:100%;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;padding:7px 8px;border-radius:5px;margin-bottom:6px;outline:none;"/>
+      <textarea id="st-note" placeholder="Optional note..." rows="2"
+        style="width:100%;background:var(--border);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;padding:7px 8px;border-radius:5px;margin-bottom:6px;outline:none;resize:none;">${curSt&&curSt.note?curSt.note:''}</textarea>
+      <button onclick="saveStatus('${l.case.replace(/'/g,"\\'")}',document.getElementById('st-sel'),document.getElementById('st-who'),document.getElementById('st-note'))"
+        style="width:100%;padding:9px;border-radius:6px;background:var(--accent);border:none;color:#fff;font-family:var(--mono);font-size:10px;cursor:pointer;font-weight:700;letter-spacing:.05em;">
+        SAVE STATUS
+      </button>
+      <div id="st-saved-msg" style="font-family:var(--mono);font-size:10px;color:var(--green);text-align:center;margin-top:6px;height:14px;"></div>
     </div>
   `;
   document.getElementById('detail-overlay').style.display = 'block';
@@ -732,6 +829,46 @@ function switchTab(id, el) {
   document.getElementById('tab-sources').style.display = id==='sources' ? '' : 'none';
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
+}
+
+// ── Status System ──
+const STATUS_OPTS = [
+  {val:'submitted',   label:'✅ Submitted to GHL', bg:'rgba(34,197,94,.15)',   color:'#22c55e'},
+  {val:'called',      label:'📞 Called',            bg:'rgba(59,130,246,.15)',  color:'#3b82f6'},
+  {val:'attempted',   label:'🔄 Attempted',         bg:'rgba(245,158,11,.15)', color:'#f59e0b'},
+  {val:'contacted',   label:'✉️ Contacted',         bg:'rgba(139,92,246,.15)', color:'#8b5cf6'},
+  {val:'dead',        label:'💀 Dead',              bg:'rgba(239,68,68,.15)',  color:'#ef4444'},
+  {val:'cant_find',   label:'🔍 Can\'t Find',       bg:'rgba(148,163,184,.15)',color:'#94a3b8'},
+  {val:'no_interest', label:'👎 Not Interested',    bg:'rgba(249,115,22,.15)', color:'#f97316'},
+  {val:'bad_lead',    label:'🚫 Bad Lead',          bg:'rgba(220,38,38,.15)',  color:'#dc2626'},
+];
+function getStatus(caseId) {
+  if (!caseId || caseId === '—') return null;
+  try { return JSON.parse(localStorage.getItem('pi_st_' + caseId) || 'null'); } catch { return null; }
+}
+function saveStatus(caseId, selEl, whoEl, noteEl) {
+  const val  = selEl.value;
+  const who  = whoEl.value.trim();
+  const note = noteEl.value.trim();
+  if (who) localStorage.setItem('pi_who', who);
+  if (!val) {
+    localStorage.removeItem('pi_st_' + caseId);
+  } else {
+    localStorage.setItem('pi_st_' + caseId, JSON.stringify({val, who, note, ts: new Date().toISOString()}));
+  }
+  const msg = document.getElementById('st-saved-msg');
+  if (msg) { msg.textContent = val ? '✓ Status saved' : '✓ Status cleared'; setTimeout(()=>{ if(msg) msg.textContent=''; },2000); }
+  renderTable();
+}
+
+// ── GHL Modal ──
+function openGHL(caseId, owner, county) {
+  document.getElementById('ghl-frame').src = 'https://api.leadconnectorhq.com/widget/form/hsgcD6NaXAAz98MNlaQt';
+  document.getElementById('ghl-overlay').style.display = 'flex';
+}
+function closeGHL() {
+  document.getElementById('ghl-overlay').style.display = 'none';
+  document.getElementById('ghl-frame').src = '';
 }
 
 window.onload = () => setTimeout(loadData, 200);
