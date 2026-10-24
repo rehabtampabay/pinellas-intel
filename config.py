@@ -84,3 +84,12 @@ COUNTIES = {
         "sheet_id": "",
     },
 }
+
+
+# ── Lead Hunter feed (Claude agent reads this sheet every weekday morning) ───
+# Google Sheet "Lead Hunter Daily Feed" in Drive: Claude Lot Sourcing /
+# Agent Knowledge Base / 04 Leads. Shared with the service account as editor.
+LEAD_HUNTER_SHEET_ID   = "181sKIBEzHmcoRQOPptA_P45oHeZ2xo26GA8hQ4TsDk8"
+LEAD_HUNTER_DAYS_BACK  = 3     # recent filings only (courts post with a lag)
+LEAD_HUNTER_MIN_SCORE  = 40    # warm and hot
+LEAD_HUNTER_MAX_ROWS   = 300

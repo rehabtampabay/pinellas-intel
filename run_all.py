@@ -466,6 +466,61 @@ def write_dashboard_json(county_results, total_new, all_leads):
           f"{stacked} stacked | {total_new} new today")
 
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Lead Hunter feed — small daily sheet for the Claude Lead Hunter agent
+# ─────────────────────────────────────────────────────────────────────────────
+
+def write_lead_hunter_feed(all_leads):
+    """Overwrite the Lead Hunter Daily Feed sheet with recent warm/hot leads.
+    Never raises: a failure here must not break the scrape or dashboard."""
+    sheet_id = getattr(config, "LEAD_HUNTER_SHEET_ID", "")
+    if not sheet_id:
+        return
+    try:
+        from datetime import timedelta
+        days   = getattr(config, "LEAD_HUNTER_DAYS_BACK", 3)
+        min_sc = getattr(config, "LEAD_HUNTER_MIN_SCORE", 40)
+        max_n  = getattr(config, "LEAD_HUNTER_MAX_ROWS", 300)
+        cutoff = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
+
+        recent = [l for l in all_leads
+                  if l.get("date", "—") != "—" and l["date"] >= cutoff
+                  and l.get("score", 0) >= min_sc]
+        # Lot/teardown deals come mostly from foreclosure, probate and tax deeds
+        priority = {"tax_deeds": 5, "lis_pendens": 4, "probate": 4,
+                    "surplus_funds": 3, "mechanic_liens": 2,
+                    "judgments": 1, "evictions": 1}
+        recent.sort(key=lambda l: (l.get("stacked", False),
+                                   priority.get(l.get("signal"), 0),
+                                   l.get("score", 0)),
+                    reverse=True)
+        recent = recent[:max_n]
+
+        updated = datetime.now().strftime("%Y-%m-%d %H:%M UTC")
+        header = ["Updated", "Score", "Heat", "County", "Signal", "Name",
+                  "Filed By", "Petitioner", "Case", "Date Filed", "Case Type",
+                  "Category", "Address", "Amount", "Stacked", "Stack Signals"]
+        rows = [header]
+        for l in recent:
+            rows.append([
+                updated, l.get("score", ""), l.get("heat", ""), l.get("county", ""),
+                l.get("label", ""), l.get("name", ""), l.get("filed_by", ""),
+                l.get("petitioner", ""), l.get("case", ""), l.get("date", ""),
+                l.get("case_type", ""), l.get("category", ""), l.get("address", ""),
+                l.get("amount", ""), "YES" if l.get("stacked") else "",
+                ", ".join(l.get("stack_signals", [])) if l.get("stacked") else "",
+            ])
+        if len(rows) == 1:
+            rows.append([updated] + ["(no recent warm/hot leads)"] + [""] * 14)
+
+        ws = sheets_helper.get_client().open_by_key(sheet_id).sheet1
+        ws.clear()
+        ws.update(values=rows, range_name="A1", value_input_option="RAW")
+        print(f"Lead Hunter feed: {len(rows) - 1} rows written")
+    except Exception as e:
+        print(f"Lead Hunter feed skipped: {e}")
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Email summary
 # ─────────────────────────────────────────────────────────────────────────────
@@ -539,6 +594,7 @@ def main():
     stacked_count = sum(1 for l in all_leads if l.get("stacked"))
 
     write_dashboard_json(county_results, total_new, all_leads)
+    write_lead_hunter_feed(all_leads)
     send_email(county_results, total_new, elapsed,
                len(all_leads), hot_count, stacked_count)
 
